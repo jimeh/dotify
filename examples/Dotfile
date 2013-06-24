@@ -1,0 +1,32 @@
+# By default the root path if your dot files (the folder the Dotfile is
+# located in) is symlinked to "~/.dotfiles". Using the "root_link" option, the
+# name of the root symlink can be customized.
+root_link .dotfiles
+
+# Symlink commands are of the form "<source>: <target>". Source is relative to
+# the directory of the Dotfile, and target is relative to the path of your
+# home folder. All symlinks are symlinked via the root link mentioned above.
+arkrc: .arkrc
+bundle: .bundle
+emacs.d: .emacs.d
+erland: .erlang
+gemrc: .gemrc
+gitconfig: .gitconfig
+gitignore: .gitignore
+hgrc: .hgrc
+irbrc: .irbrc
+powconfig: .powconfig
+rspec: .rspec
+tmux: .tmux
+tmux.conf: .tmux.conf
+
+# The same source can be symlinked to multiple targets.
+load_shellrc.sh: .profile
+load_shellrc.sh: .zshrc
+
+# Wild-cards can be used in source, but target has to then be a directory
+# instead of a file name.
+launch_agents/*.plist: Library/LaunchAgents/
+
+# Include additional Dotfiles.
+include private/Dotfile
