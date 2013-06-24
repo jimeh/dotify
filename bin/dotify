@@ -1,0 +1,211 @@
+#! /usr/bin/env bash
+set -e
+[ -n "$DOTIFY_DEBUG" ] && set -x
+
+#
+# Helper Functions
+#
+
+parse-argument() {
+  local long short arg next_arg
+
+  long="--$1"
+  shift
+  short="-$1"
+  shift
+
+  for arg in "$@"; do
+    if [ -n "$next_arg" ]; then
+      echo "$arg"
+      return 0
+    elif [[ " $arg " == *" $long "* ]] || [[ " $arg " == *" $short "* ]]; then
+      next_arg="yes"
+    elif [[ " $arg " == *" $long="* ]]; then
+      arg="${arg/#$long=/}"
+      echo "$arg"
+      return 0
+    elif [[ " $arg " == *" $short="* ]]; then
+      arg="${arg/#$short=/}"
+      echo "$arg"
+      return 0
+    fi
+  done
+  return 1
+}
+
+has-argument() {
+  local long short arg next_arg
+
+  long="--$1"
+  shift
+  short="-$1"
+  shift
+
+  if [[ " $@ " == *" $long "* ]] || [[ " $@ " == *" $long="* ]]; then
+    return 0
+  elif [[ " $@ " == *" $short "* ]] || [[ " $@ " == *" $short="* ]]; then
+    return 0
+  fi
+  return 1
+}
+
+# Expands given path.
+#
+# Example:
+#
+#   $ expand-path "~/Projects"
+#   /Users/jimeh/Projects
+#
+expand-path() {
+  echo $(eval echo "$@")
+}
+
+locate-dotfile() {
+  local dotfile
+  if has-argument dotfile f "$@"; then
+    dotfile="$(parse-argument dotfile f "$@")"
+    dotfile="$(expand-path "$dotfile")"
+    if [ ! -f "$dotfile" ]; then
+      echo "ERROR: \"$dotfile\" does not exist." >&2
+      return 1
+    fi
+  elif [ -f "$(pwd)/Dotfile" ]; then
+    dotfile="$(pwd)/Dotfile"
+  else
+    echo "ERROR: \"$(pwd)\" does not have a Dotfile." >&2
+    return 1
+  fi
+
+  echo "$dotfile"
+}
+
+locate-target() {
+  local target
+  if has-argument target t "$@"; then
+    target="$(parse-argument target t "$@")"
+    target="$(expand-path "$target")"
+    if [ ! -d "$target" ]; then
+      echo "ERROR: Target \"$target\" is not a directory."
+      return 1
+    fi
+  elif [ -n "$HOME" ] && [ -d "$HOME" ]; then
+    target="$HOME"
+  elif [ -d "$(expand-path "~")" ]; then
+    target="$HOME"
+  else
+    echo "ERROR: Your \$HOME folder could not be found."
+    return 1
+  fi
+
+  echo "$target"
+}
+
+parse-dotfile-root_link() {
+  local dotfile="$1"
+  local root_link
+
+  while read line; do
+    if [[ "$line" == "root_link "* ]]; then
+      root_link=${line/#root_link /}
+      break
+    fi
+  done < "$dotfile"
+  if [ -z "$root_link" ]; then root_link=".dotfiles"; fi
+
+  echo "$root_link"
+}
+
+parse-dotfile() {
+  local dotfile="$1"
+  local root="$(dirname "$dotfile")"
+  local target="$2"
+  local root_link="$(parse-dotfile-root_link "$dotfile")"
+
+  while read line; do
+    parse-dotfile-line "$dotfile" "$target" "$line"
+  done < "$dotfile"
+}
+
+parse-dotfile-line() {
+  local dotfile="$1"
+  local root="$(dirname "$1")"
+  local target="$2"
+  local line="$3"
+
+  # Ignore comment lines starting with "#".
+  if [[ "$line" == "#"* ]]; then return 0; fi
+
+  # Ignore root link command
+  if [[ "$line" == "root_link "* ]]; then return 0; fi
+
+  echo "$line"
+}
+
+
+#
+# Main functions
+#
+
+dotify-version() {
+  echo "0.0.1"
+}
+
+dotify-help() {
+  echo "dotify $(dotify-version)"
+}
+
+dotify-symlink() {
+  local dotfile="$(locate-dotfile "$@")"
+  if [ -z "$dotfile" ]; then return 1; fi
+
+  local target="$(locate-target "$@")"
+  if [ -z "$target" ]; then return 1; fi
+
+  parse-dotfile "$dotfile" "$target"
+}
+
+dotify-info() {
+  local dotfile="$(locate-dotfile "$@")"
+  if [ -z "$dotfile" ]; then return 1; fi
+
+  local target="$(locate-target "$@")"
+  if [ -z "$target" ]; then return 1; fi
+
+  echo "dotify $(dotify-version)"
+  echo "  Dotfile: $dotfile"
+  echo "     Root: $(dirname "$dotfile")"
+  echo "   Target: $target"
+}
+
+
+#
+# Command Parsing
+#
+
+# If arguments include "--help" or "-h" display help and exit.
+if has-argument help h "$@"; then
+  dotify-help "$@"
+  exit
+fi
+
+# Command is first argument that does not start with a dash.
+for arg in "$@"; do
+  if [[ "$arg" != "-"* ]]; then
+    command="$arg"
+    break
+  fi
+done
+
+case "$command" in
+  "help" )
+    dotify-help "$@"
+    ;;
+  "info" )
+    dotify-info "$@"
+    ;;
+  "" | "link" | "symlink" )
+    dotify-symlink "$@"
+    ;;
+esac
+
+exit "$?"
