@@ -1,5 +1,8 @@
-test:
+build:
+	./build.sh
+
+test: build
 	test/run.sh
 
 .SILENT:
-.PHONY: test
+.PHONY: build test
