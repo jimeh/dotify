@@ -6,6 +6,20 @@ set -e
 # Helper Functions
 #
 
+# Parses and echos value of specified argument.
+#
+# Example:
+#
+#   $ parse-argument file f "-t none --file /tmp/foobar.txt"
+#   /tmp/foobar.txt
+#   $ parse-argument file f "-t none --file=/tmp/foobar.txt"
+#   /tmp/foobar.txt
+#   $ parse-argument file f "-t none -f /tmp/foobar.txt"
+#   /tmp/foobar.txt
+#   $ parse-argument file f "-t none -f=/tmp/foobar.txt"
+#   /tmp/foobar.txt
+#
+# Returns 0 and echos value if argument was found, returns 1 otherwise.
 parse-argument() {
   local long short arg next_arg
 
@@ -33,6 +47,18 @@ parse-argument() {
   return 1
 }
 
+# Checks for specified argument.
+#
+# Example:
+#
+#   $ has-argument help h "-t none"
+#   > returns 1
+#   $ has-argument help h "-t none --help"
+#   > returns 0
+#   $ has-argument help h "-t none -h"
+#   > returns 0
+#
+# Returns 0 and echos value if argument was found, returns 1 otherwise.
 has-argument() {
   local long short arg next_arg
 
@@ -49,16 +75,37 @@ has-argument() {
   return 1
 }
 
+# Trim leading and trailing whitespace.
+#
+# Example:
+#
+#   $ trim "  foo bar   "
+#   foo bar
+#
+trim() {
+  local string="$@"
+  string="${string#"${string%%[![:space:]]*}"}"
+  string="${string%"${string##*[![:space:]]}"}"
+  echo -n "$string"
+}
+
 # Expands given path.
 #
 # Example:
 #
 #   $ expand-path "~/Projects"
 #   /Users/jimeh/Projects
+#   $ expand-path "config/*.json"
+#   config/application.json config/database.yml
 #
 expand-path() {
   echo $(eval echo "$@")
 }
+
+
+#
+# Internal functions
+#
 
 locate-dotfile() {
   local dotfile
@@ -100,45 +147,94 @@ locate-target() {
   echo "$target"
 }
 
-parse-dotfile-root_link() {
-  local dotfile="$1"
-  local root_link
+create-rootlink() {
+  local root="$1"
+  local rootlink="$2"
+}
 
-  while read line; do
-    if [[ "$line" == "root_link "* ]]; then
-      root_link=${line/#root_link /}
-      break
-    fi
-  done < "$dotfile"
-  if [ -z "$root_link" ]; then root_link=".dotfiles"; fi
-
-  echo "$root_link"
+create-symlink() {
+  local source="$1"
+  local target="$2"
 }
 
 parse-dotfile() {
   local dotfile="$1"
-  local root="$(dirname "$dotfile")"
   local target="$2"
-  local root_link="$(parse-dotfile-root_link "$dotfile")"
+  local rootlink="$(parse-dotfile-rootlink "$dotfile")"
+
+  local rootdir="$(dirname "$dotfile")"
+  local cwd="$(pwd)"
+  cd "$rootdir"
+
+  create-rootlink "$rootdir" "$target/$rootlink"
+  if [ -n "$?" ]; then return 1; fi
 
   while read line; do
-    parse-dotfile-line "$dotfile" "$target" "$line"
+    parse-dotfile-line "$dotfile" "$target" "$rootdir" "$rootlink" "$line"
+    if [ -n "$?" ]; then return 1; fi
   done < "$dotfile"
+
+  cd "$cwd"
+}
+
+parse-dotfile-rootlink() {
+  local dotfile="$1"
+  local rootlink
+
+  while read line; do
+    if [[ "$line" == "root_link "* ]]; then
+      rootlink=${line/#root_link /}
+      break
+    fi
+  done < "$dotfile"
+
+  if [ -z "$rootlink" ]; then rootlink=".dotfiles"; fi
+
+  echo "$root_link"
 }
 
 parse-dotfile-line() {
   local dotfile="$1"
-  local root="$(dirname "$1")"
   local target="$2"
-  local line="$3"
+  local rootdir="$3"
+  local rootlink="$4"
+  local line="$5"
 
   # Ignore comment lines starting with "#".
   if [[ "$line" == "#"* ]]; then return 0; fi
 
-  # Ignore root link command
+  # Ignore root link command.
   if [[ "$line" == "root_link "* ]]; then return 0; fi
 
+  # Handle include command.
+  if [[ "$line" == "include "* ]]; then
+    include-dotfile "${line/#include /}" "$target" "$rootdir" "$rootlink"
+    return "$?"
+  fi
+
   echo "$line"
+}
+
+include-dotfile() {
+  local dotfile="$(expand-path "$1")"
+  local target="$2"
+  local rootdir="$3"
+  local rootlink="$4"
+
+  local cwd="$(pwd)"
+  cd "$rootdir"
+
+  if [ ! -f "$dotfile" ]; then
+    echo "ERROR: Can not include \"$dotfile\", it does not exist." >&2
+    return 1
+  fi
+
+  while read line; do
+    parse-dotfile-line "$dotfile" "$target" "$rootdir" "$rootlink" "$line"
+    if [ -n "$?" ]; then return 1; fi
+  done < "$dotfile"
+
+  cd "$cwd"
 }
 
 
@@ -162,6 +258,7 @@ dotify-symlink() {
   if [ -z "$target" ]; then return 1; fi
 
   parse-dotfile "$dotfile" "$target"
+  return "$?"
 }
 
 dotify-info() {
