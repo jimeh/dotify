@@ -2,31 +2,81 @@
 set -e
 [ -n "$DOTIFY_DEBUG" ] && set -x
 
+# dotify 0.0.1
+# https://github.com/jimeh/dotify
 #
-# Helper Functions
+# Copyright (c) 2013 Jim Myhrberg.
 #
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
+
+#
+# Helper functions
+#
+
+# Checks for specified argument.
+#
+# Example:
+#
+#   $ has-argument help h "-t none"
+#   > returns 1
+#   $ has-argument help h "-t none --help"
+#   > returns 0
+#   $ has-argument help h "-t none -h"
+#   > returns 0
+#
+# Returns 0 if argument was found, returns 1 otherwise.
+has-argument() {
+  local long short
+
+  long="--$1"
+  short="-$2"
+  shift 2
+
+  if [[ " $@ " == *" $long "* ]] || [[ " $@ " == *" $long="* ]]; then
+    return 0
+  elif [[ " $@ " == *" $short "* ]] || [[ " $@ " == *" $short="* ]]; then
+    return 0
+  fi
+  return 1
+}
 
 # Parses and echos value of specified argument.
 #
 # Example:
 #
-#   $ parse-argument file f "-t none --file /tmp/foobar.txt"
+#   $ parse-argument file f -t none --file /tmp/foobar.txt
 #   /tmp/foobar.txt
-#   $ parse-argument file f "-t none --file=/tmp/foobar.txt"
+#   $ parse-argument file f -t none --file="/tmp/foo bar.txt"
+#   /tmp/foo bar.txt
+#   $ parse-argument file f -t none -f /tmp/foobar.txt
 #   /tmp/foobar.txt
-#   $ parse-argument file f "-t none -f /tmp/foobar.txt"
-#   /tmp/foobar.txt
-#   $ parse-argument file f "-t none -f=/tmp/foobar.txt"
-#   /tmp/foobar.txt
+#   $ parse-argument file f -t none -f=/tmp/foo\ bar.txt
+#   /tmp/foo bar.txt
 #
 # Returns 0 and echos value if argument was found, returns 1 otherwise.
 parse-argument() {
   local long short arg next_arg
 
   long="--$1"
-  shift
-  short="-$1"
-  shift
+  short="-$2"
+  shift 2
 
   for arg in "$@"; do
     if [ -n "$next_arg" ]; then
@@ -44,34 +94,6 @@ parse-argument() {
       return 0
     fi
   done
-  return 1
-}
-
-# Checks for specified argument.
-#
-# Example:
-#
-#   $ has-argument help h "-t none"
-#   > returns 1
-#   $ has-argument help h "-t none --help"
-#   > returns 0
-#   $ has-argument help h "-t none -h"
-#   > returns 0
-#
-# Returns 0 and echos value if argument was found, returns 1 otherwise.
-has-argument() {
-  local long short arg next_arg
-
-  long="--$1"
-  shift
-  short="-$1"
-  shift
-
-  if [[ " $@ " == *" $long "* ]] || [[ " $@ " == *" $long="* ]]; then
-    return 0
-  elif [[ " $@ " == *" $short "* ]] || [[ " $@ " == *" $short="* ]]; then
-    return 0
-  fi
   return 1
 }
 
@@ -109,9 +131,8 @@ expand-path() {
 
 locate-dotfile() {
   local dotfile
-  if has-argument dotfile f "$@"; then
-    dotfile="$(parse-argument dotfile f "$@")"
-    dotfile="$(expand-path "$dotfile")"
+  if [ -n "$DOTFILE" ]; then
+    dotfile="$DOTFILE"
     if [ ! -f "$dotfile" ]; then
       echo "ERROR: \"$dotfile\" does not exist." >&2
       return 1
@@ -128,19 +149,18 @@ locate-dotfile() {
 
 locate-target() {
   local target
-  if has-argument target t "$@"; then
-    target="$(parse-argument target t "$@")"
-    target="$(expand-path "$target")"
+  if [ -n "$DOTFILE" ]; then
+    target="$TARGET"
     if [ ! -d "$target" ]; then
-      echo "ERROR: Target \"$target\" is not a directory."
+      echo "ERROR: Target \"$target\" is not a directory." >&2
       return 1
     fi
   elif [ -n "$HOME" ] && [ -d "$HOME" ]; then
     target="$HOME"
-  elif [ -d "$(expand-path "~")" ]; then
-    target="$HOME"
+  elif [ -d ~ ]; then
+    target=~
   else
-    echo "ERROR: Your \$HOME folder could not be found."
+    echo "ERROR: Your \$HOME folder could not be found." >&2
     return 1
   fi
 
@@ -239,26 +259,20 @@ include-dotfile() {
 
 
 #
-# Main functions
+# Command functions
 #
 
 dotify-version() {
   echo "0.0.1"
 }
 
-dotify-help() {
+dotify-print-version() {
   echo "dotify $(dotify-version)"
 }
 
-dotify-symlink() {
-  local dotfile="$(locate-dotfile "$@")"
-  if [ -z "$dotfile" ]; then return 1; fi
-
-  local target="$(locate-target "$@")"
-  if [ -z "$target" ]; then return 1; fi
-
-  parse-dotfile "$dotfile" "$target"
-  return "$?"
+dotify-help() {
+  echo "$(dotify-print-version)"
+  echo "usage: dotify <command> [<args>]"
 }
 
 dotify-info() {
@@ -274,35 +288,74 @@ dotify-info() {
   echo "   Target: $target"
 }
 
+dotify-install() {
+  local dotfile="$(locate-dotfile)"
+  if [ -z "$dotfile" ]; then return 1; fi
+
+  local target="$(locate-target)"
+  if [ -z "$target" ]; then return 1; fi
+
+  parse-dotfile "$dotfile" "$target"
+  return "$?"
+}
+
+
+#
+# Argument Parsing
+#
+
+DOTFILE="" # --dotfile / -f
+TARGET=""  # --target  / -t
+HELP=""    # --help    / -h
+VERSION="" # --version / -v
+
+if has-argument dotfile f "$@"; then
+  DOTFILE="$(parse-argument dotfile f "$@")"
+fi
+
+if has-argument target t "$@"; then
+  TARGET="$(parse-argument target t "$@")"
+fi
+
+if has-argument help h "$@"; then
+  HELP="1"
+fi
+
+if has-argument version v "$@"; then
+  VERSION="1"
+fi
+
 
 #
 # Command Parsing
 #
 
-# If arguments include "--help" or "-h" display help and exit.
-if has-argument help h "$@"; then
-  dotify-help "$@"
-  exit
-fi
-
-# Command is first argument that does not start with a dash.
+# Command is first argument that does not start with a dash or plus.
 for arg in "$@"; do
-  if [[ "$arg" != "-"* ]]; then
+  if [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
     command="$arg"
     break
   fi
 done
 
+if [ -n "$HELP" ] || [ "$command" == "help" ]; then
+  dotify-help
+  exit
+fi
+
+if [ -n "$VERSION" ] || [ "$command" == "version" ]; then
+  dotify-help | head -1
+  exit
+fi
+
 case "$command" in
-  "help" )
-    dotify-help "$@"
-    ;;
   "info" )
-    dotify-info "$@"
+    dotify-info
     ;;
-  "" | "link" | "symlink" )
-    dotify-symlink "$@"
+  "" | "install" )
+    dotify-install
     ;;
 esac
 
 exit "$?"
+
