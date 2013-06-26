@@ -9,9 +9,9 @@
 #   $ has-argument help h "-t none -h"
 #   > returns 0
 #
-# Returns 0 and echos value if argument was found, returns 1 otherwise.
+# Returns 0 if argument was found, returns 1 otherwise.
 has-argument() {
-  local long short args arg next_arg
+  local long short
 
   long="--$1"
   short="-$2"
