@@ -1,7 +1,3 @@
-#
-# Internal functions
-#
-
 locate-dotfile() {
   local dotfile
   if [ -n "$DOTFILE" ]; then

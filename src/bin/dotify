@@ -3,6 +3,7 @@ set -e
 [ -n "$DOTIFY_DEBUG" ] && set -x
 
 # dotify {{VERSION}}
+# https://github.com/jimeh/dotify
 #
 # Copyright (c) 2013 Jim Myhrberg.
 #
@@ -25,10 +26,23 @@ set -e
 # IN THE SOFTWARE.
 
 
+#
+# Helper functions
+#
+
 source "../lib/arguments.sh"
 source "../lib/trim.sh"
 source "../lib/expand-path.sh"
+
+#
+# Internal functions
+#
+
 source "../lib/internals.sh"
+
+#
+# Command functions
+#
 
 source "../lib/dotify-version.sh"
 source "../lib/dotify-help.sh"
