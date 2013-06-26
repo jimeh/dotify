@@ -1,3 +1,4 @@
 dotify-help() {
-  echo "dotify $(dotify-version)"
+  echo "$(dotify-print-version)"
+  echo "usage: dotify <command> [<args>]"
 }
