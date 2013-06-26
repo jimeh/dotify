@@ -33,7 +33,7 @@ source "../lib/internals.sh"
 source "../lib/dotify-version.sh"
 source "../lib/dotify-help.sh"
 source "../lib/dotify-info.sh"
-source "../lib/dotify-run.sh"
+source "../lib/dotify-install.sh"
 
 #
 # Command Parsing
@@ -60,8 +60,8 @@ case "$command" in
   "info" )
     dotify-info "$@"
     ;;
-  "" | "link" | "symlink" )
-    dotify-symlink "$@"
+  "" | "install" )
+    dotify-install
     ;;
 esac
 
