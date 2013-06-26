@@ -36,29 +36,56 @@ source "../lib/dotify-info.sh"
 source "../lib/dotify-install.sh"
 
 #
+# Argument Parsing
+#
+
+DOTFILE="" # --dotfile / -f
+TARGET=""  # --target  / -t
+HELP=""    # --help    / -h
+VERSION="" # --version / -v
+
+if has-argument dotfile f "$@"; then
+  DOTFILE="$(parse-argument dotfile f "$@")"
+fi
+
+if has-argument target t "$@"; then
+  TARGET="$(parse-argument target t "$@")"
+fi
+
+if has-argument help h "$@"; then
+  HELP="1"
+fi
+
+if has-argument version v "$@"; then
+  VERSION="1"
+fi
+
+
+#
 # Command Parsing
 #
 
-# If arguments include "--help" or "-h" display help and exit.
-if has-argument help h "$@"; then
-  dotify-help "$@"
-  exit
-fi
-
-# Command is first argument that does not start with a dash.
+# Command is first argument that does not start with a dash or plus.
 for arg in "$@"; do
-  if [[ "$arg" != "-"* ]]; then
+  if [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
     command="$arg"
     break
   fi
 done
 
+if [ -n "$HELP" ] || [ "$command" == "help" ]; then
+  dotify-help
+  exit
+fi
+
+if [ -n "$VERSION" ] || [ "$command" == "version" ]; then
+  dotify-help | head -1
+  exit
+fi
+
 case "$command" in
-  "help" )
-    dotify-help "$@"
-    ;;
   "info" )
-    dotify-info "$@"
+    dotify-info
     ;;
   "" | "install" )
     dotify-install

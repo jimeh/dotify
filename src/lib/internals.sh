@@ -4,9 +4,8 @@
 
 locate-dotfile() {
   local dotfile
-  if has-argument dotfile f "$@"; then
-    dotfile="$(parse-argument dotfile f "$@")"
-    dotfile="$(expand-path "$dotfile")"
+  if [ -n "$DOTFILE" ]; then
+    dotfile="$DOTFILE"
     if [ ! -f "$dotfile" ]; then
       echo "ERROR: \"$dotfile\" does not exist." >&2
       return 1
@@ -23,19 +22,18 @@ locate-dotfile() {
 
 locate-target() {
   local target
-  if has-argument target t "$@"; then
-    target="$(parse-argument target t "$@")"
-    target="$(expand-path "$target")"
+  if [ -n "$DOTFILE" ]; then
+    target="$TARGET"
     if [ ! -d "$target" ]; then
-      echo "ERROR: Target \"$target\" is not a directory."
+      echo "ERROR: Target \"$target\" is not a directory." >&2
       return 1
     fi
   elif [ -n "$HOME" ] && [ -d "$HOME" ]; then
     target="$HOME"
-  elif [ -d "$(expand-path "~")" ]; then
-    target="$HOME"
+  elif [ -d ~ ]; then
+    target=~
   else
-    echo "ERROR: Your \$HOME folder could not be found."
+    echo "ERROR: Your \$HOME folder could not be found." >&2
     return 1
   fi
 
