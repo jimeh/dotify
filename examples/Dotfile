@@ -3,30 +3,50 @@
 # name of the root symlink can be customized.
 root_link .dotfiles
 
-# Symlink commands are of the form "<source>: <target>". Source is relative to
-# the directory of the Dotfile, and target is relative to the path of your
-# home folder. All symlinks are symlinked via the root link mentioned above.
-arkrc: .arkrc
-bundle: .bundle
-emacs.d: .emacs.d
-erland: .erlang
-gemrc: .gemrc
-gitconfig: .gitconfig
-gitignore: .gitignore
-hgrc: .hgrc
-irbrc: .irbrc
-powconfig: .powconfig
-rspec: .rspec
-tmux: .tmux
-tmux.conf: .tmux.conf
+# Each line defines an action, if not action name is given, the default is
+# assumed.
+default_action link
+
+# Actions are formatted as "<action>: <data>". The link action is the most
+# commonly used one, and it's data format is "<source> -> <target>". Source
+# being relative to the directory the Dotfile is located in, and target
+# relative to your home folder. The link action creates symlinks via the root
+# link.
+link: arkrc -> .arkrc
+
+# With no action specified, the default action is assumed, in this case that
+# would be the link action.
+bundle    -> .bundle
+emacs.d   -> .emacs.d
+erland    -> .erlang
+gemrc     -> .gemrc
+gitconfig -> .gitconfig
+gitignore -> .gitignore
+hgrc      -> .hgrc
+irbrc     -> .irbrc
+powconfig -> .powconfig
+rspec     -> .rspec
+tmux      -> .tmux
+tmux.conf -> .tmux.conf
 
 # The same source can be symlinked to multiple targets.
-load_shellrc.sh: .profile
-load_shellrc.sh: .zshrc
+load_shellrc.sh -> .profile
+load_shellrc.sh -> .zshrc
 
 # Wild-cards can be used in source, but target has to then be a directory
 # instead of a file name.
-launch_agents/*.plist: Library/LaunchAgents/
+launch_agents/*.plist -> Library/LaunchAgents/
 
-# Include additional Dotfiles.
+# The git action clones git repositories to a path relative from your home
+# folder. If you want external git repos to be cloned into your dotfiles, use
+# git submodules instead.
+git: https://github.com/sstephenson/rbenv.git -> .rbenv
+
+# Wrap long lines by ending a line with a backslash.
+git: https://github.com/sstephenson/ruby-build.git -> \
+     .rbenv/plugins/ruby-build
+
+# Include and parse additional Dotfiles. Useful if your main dotfiles repo is
+# public, and you have a private set of dotfiles for SSH keys and the like
+# that you pull into your public repo via a git submodule.
 include private/Dotfile
