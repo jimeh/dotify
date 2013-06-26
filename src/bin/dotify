@@ -32,7 +32,6 @@ set -e
 
 source "../lib/arguments.sh"
 source "../lib/trim.sh"
-source "../lib/expand-path.sh"
 
 #
 # Internal functions

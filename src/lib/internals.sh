@@ -105,7 +105,7 @@ parse-dotfile-line() {
 }
 
 include-dotfile() {
-  local dotfile="$(expand-path "$1")"
+  local dotfile="$1"
   local target="$2"
   local rootdir="$3"
   local rootlink="$4"

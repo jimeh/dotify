@@ -111,19 +111,6 @@ trim() {
   echo -n "$string"
 }
 
-# Expands given path.
-#
-# Example:
-#
-#   $ expand-path "~/Projects"
-#   /Users/jimeh/Projects
-#   $ expand-path "config/*.json"
-#   config/application.json config/database.yml
-#
-expand-path() {
-  echo $(eval echo "$@")
-}
-
 
 #
 # Internal functions
@@ -236,7 +223,7 @@ parse-dotfile-line() {
 }
 
 include-dotfile() {
-  local dotfile="$(expand-path "$1")"
+  local dotfile="$1"
   local target="$2"
   local rootdir="$3"
   local rootlink="$4"
