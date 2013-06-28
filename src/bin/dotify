@@ -86,16 +86,19 @@ for arg in "$@"; do
   fi
 done
 
+# Show help and exit if help arguments or command are given.
 if [ -n "$HELP" ] || [ "$command" == "help" ]; then
   dotify-help
   exit
 fi
 
+# Show version info and exit if version arguments or command are given.
 if [ -n "$VERSION" ] || [ "$command" == "version" ]; then
   dotify-help | head -1
   exit
 fi
 
+# Deal with the commands.
 case "$command" in
   "info" )
     dotify-info
