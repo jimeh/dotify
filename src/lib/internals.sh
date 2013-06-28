@@ -1,39 +1,31 @@
 locate-dotfile() {
-  local dotfile
   if [ -n "$DOTFILE" ]; then
-    dotfile="$DOTFILE"
-    if [ ! -f "$dotfile" ]; then
-      echo "ERROR: \"$dotfile\" does not exist." >&2
+    if [ ! -f "$DOTFILE" ]; then
+      echo "ERROR: \"$DOTFILE\" does not exist." >&2
       return 1
     fi
   elif [ -f "$(pwd)/Dotfile" ]; then
-    dotfile="$(pwd)/Dotfile"
+    DOTFILE="$(pwd)/Dotfile"
   else
     echo "ERROR: \"$(pwd)\" does not have a Dotfile." >&2
     return 1
   fi
-
-  echo "$dotfile"
 }
 
 locate-target() {
-  local target
-  if [ -n "$DOTFILE" ]; then
-    target="$TARGET"
-    if [ ! -d "$target" ]; then
-      echo "ERROR: Target \"$target\" is not a directory." >&2
+  if [ -n "$TARGET" ]; then
+    if [ ! -d "$TARGET" ]; then
+      echo "ERROR: Target \"$TARGET\" is not a directory." >&2
       return 1
     fi
   elif [ -n "$HOME" ] && [ -d "$HOME" ]; then
-    target="$HOME"
+    TARGET="$HOME"
   elif [ -d ~ ]; then
-    target=~
+    TARGET=~
   else
     echo "ERROR: Your \$HOME folder could not be found." >&2
     return 1
   fi
-
-  echo "$target"
 }
 
 create-rootlink() {
