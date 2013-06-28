@@ -108,4 +108,4 @@ case "$command" in
     ;;
 esac
 
-exit "$?"
+exit $?

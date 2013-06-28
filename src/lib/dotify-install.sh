@@ -6,5 +6,5 @@ dotify-install() {
   if [ -z "$target" ]; then return 1; fi
 
   parse-dotfile "$dotfile" "$target"
-  return "$?"
+  return $?
 }
