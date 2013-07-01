@@ -37,6 +37,7 @@ source "../lib/trim.sh"
 # Internal functions
 #
 
+source "../lib/parse-dotfile-options.sh"
 source "../lib/internals.sh"
 
 #

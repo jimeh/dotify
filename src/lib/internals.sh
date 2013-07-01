@@ -51,35 +51,6 @@ execute-dotfile() {
   cd "$cwd"
 }
 
-parse-dotfile-options() {
-  parse-dotfile-root_link-option
-  parse-dotfile-default_action-option
-}
-
-parse-dotfile-root_link-option() {
-  # Set default.
-  OPT_ROOT_LINK=".dotfiles"
-
-  while read line; do
-    if [[ "$line" == "root_link "* ]]; then
-      OPT_ROOT_LINK="$(trim "${line/#root_link /}")"
-      break
-    fi
-  done < "$DOTFILE"
-}
-
-parse-dotfile-default_action-option() {
-  # Set default.
-  OPT_DEFAULT_ACTION="link"
-
-  while read line; do
-    if [[ "$line" == "default_action "* ]]; then
-      OPT_DEFAULT_ACTION="$(trim "${line/#default_action /}")"
-      break
-    fi
-  done < "$DOTFILE"
-}
-
 parse-dotfile-line() {
   local line="$(trim "$1")"
   local dotfile="$DOTFILE"
