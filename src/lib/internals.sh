@@ -34,11 +34,11 @@ create-symlink() {
 }
 
 execute-dotfile() {
-  ROOTDIR="$(dirname "$DOTFILE")"
   parse-dotfile-options
+  local root_dir="$(dirname "$DOTFILE")"
 
   local cwd="$(pwd)"
-  cd "$rootdir"
+  cd "$root_dir"
 
   create-symlink "$root_dir" "$TARGET/$OPT_ROOT_LINK"
   if [ -n "$?" ]; then return 1; fi
@@ -103,9 +103,10 @@ parse-dotfile-line() {
 
 include-dotfile() {
   local dotfile="$1"
+  local root_dir="$(dirname "$dotfile")"
 
   local cwd="$(pwd)"
-  cd "$rootdir"
+  cd "$root_dir"
 
   if [ ! -f "$dotfile" ]; then
     echo "ERROR: Can not include \"$dotfile\", it does not exist." >&2
