@@ -34,13 +34,13 @@ create-symlink() {
 }
 
 execute-dotfile() {
-  parse-dotfile-rootlink
   ROOTDIR="$(dirname "$DOTFILE")"
+  parse-dotfile-options
 
   local cwd="$(pwd)"
   cd "$rootdir"
 
-  create-symlink "$rootdir" "$TARGET/$ROOTLINK"
+  create-symlink "$root_dir" "$TARGET/$OPT_ROOT_LINK"
   if [ -n "$?" ]; then return 1; fi
 
   while read line; do
@@ -51,16 +51,33 @@ execute-dotfile() {
   cd "$cwd"
 }
 
-parse-dotfile-rootlink() {
+parse-dotfile-options() {
+  parse-dotfile-root_link-option
+  parse-dotfile-default_action-option
+}
+
+parse-dotfile-root_link-option() {
+  # Set default.
+  OPT_ROOT_LINK=".dotfiles"
+
   while read line; do
     if [[ "$line" == "root_link "* ]]; then
-      ROOTLINK="$(trim "${line/#root_link /}")"
+      OPT_ROOT_LINK="$(trim "${line/#root_link /}")"
       break
     fi
   done < "$DOTFILE"
+}
 
-  if [ -z "$ROOTLINK" ]; then ROOTLINK=".dotfiles"; fi
-  echo "$ROOTLINK"
+parse-dotfile-default_action-option() {
+  # Set default.
+  OPT_DEFAULT_ACTION="link"
+
+  while read line; do
+    if [[ "$line" == "default_action "* ]]; then
+      OPT_DEFAULT_ACTION="$(trim "${line/#default_action /}")"
+      break
+    fi
+  done < "$DOTFILE"
 }
 
 parse-dotfile-line() {
@@ -71,8 +88,9 @@ parse-dotfile-line() {
   # Ignore comment lines starting with "#".
   if [[ "$line" == "#"* ]]; then return 0; fi
 
-  # Ignore root link command.
+  # Ignore Dotfile options.
   if [[ "$line" == "root_link "* ]]; then return 0; fi
+  if [[ "$line" == "default_action "* ]]; then return 0; fi
 
   # Handle include command.
   if [[ "$line" == "include "* ]]; then
