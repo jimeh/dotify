@@ -7,12 +7,12 @@ source "../../src/lib/internals.sh"
 #
 
 # Create temp files/folders used for locate-dotfile() tests.
-mkdir -p "locate-dotfile-tests/without"
-mkdir -p "locate-dotfile-tests/with"
-touch "locate-dotfile-tests/with/Dotfile"
+mkdir -p "test-tmp/without"
+mkdir -p "test-tmp/with"
+touch "test-tmp/with/Dotfile"
 
 # When $DOTFILE is empty and current path has a Dotfile.
-cd "locate-dotfile-tests/with"
+cd "test-tmp/with"
 DOTFILE=""
 assert_raises 'locate-dotfile' 0
 assert 'locate-dotfile; echo "$DOTFILE"' "$(pwd)/Dotfile"
@@ -20,7 +20,7 @@ unset DOTFILE
 cd-back
 
 # When $DOTFILE is empty and current path does not have a Dotfile.
-cd "locate-dotfile-tests/without"
+cd "test-tmp/without"
 DOTFILE=""
 assert_raises 'locate-dotfile' 1
 assert 'locate-dotfile 2>&1' "ERROR: \"$(pwd)\" does not have a Dotfile."
@@ -29,24 +29,28 @@ unset DOTFILE
 cd-back
 
 # When $DOTFILE is not empty and points at a existing Dotfile.
-DOTFILE="locate-dotfile-tests/with/Dotfile"
+DOTFILE="test-tmp/with/Dotfile"
 assert_raises 'locate-dotfile' 0
 assert 'locate-dotfile; echo "$DOTFILE"' "$DOTFILE"
 unset DOTFILE
 
 # When $DOTFILE is not empty and points at a non-existing Dotfile.
-DOTFILE="locate-dotfile-tests/without/Dotfile"
+DOTFILE="test-tmp/without/Dotfile"
 assert_raises 'locate-dotfile' 1
 assert 'locate-dotfile 2>&1' "ERROR: \"$DOTFILE\" does not exist."
 assert 'locate-dotfile; echo "$DOTFILE"' "$DOTFILE"
 unset DOTFILE
 
 # Remove temp files/folders used for locate-dotfile() tests.
-rm "locate-dotfile-tests/with/Dotfile"
-rmdir "locate-dotfile-tests/with"
-rmdir "locate-dotfile-tests/without"
-rmdir "locate-dotfile-tests"
+rm "test-tmp/with/Dotfile"
+rmdir "test-tmp/with"
+rmdir "test-tmp/without"
+rmdir "test-tmp"
 
+# Ensure temp files/folder were cleaned up.
+assert_raises "test -d test-tmp" 1
+
+# End of locate-dotfile() tests.
 assert_end 'locate-dotfile()'
 
 
@@ -80,4 +84,5 @@ assert_raises 'locate-target' 0
 assert 'locate-target; echo "$TARGET"' "$original_home"
 HOME="$original_home"
 
+# End of locate-target() tests.
 assert_end 'locate-target()'
