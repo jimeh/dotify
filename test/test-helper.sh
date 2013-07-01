@@ -29,13 +29,13 @@ stub() {
 # Restore the original command/function that was stubbed with stub.
 restore() {
   local cmd="$1"
-  unset "$cmd"
+  unset -f "$cmd"
   if type "original_${cmd}" &>/dev/null; then
     if [[ "$(type "original_${cmd}" | head -1)" == *"is a function" ]]; then
       local source="$(type "original_$cmd" | tail -n +2)"
       source="${source/original_${cmd}/$cmd}"
       eval "$source"
-      unset "original_${cmd}"
+      unset -f "original_${cmd}"
     fi
   fi
 }
