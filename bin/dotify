@@ -116,6 +116,45 @@ trim() {
 # Internal functions
 #
 
+parse-dotfile-options() {
+  OPT_ROOT_LINK="$(parse-dotfile-root_link-option)"
+  OPT_DEFAULT_ACTION="$(parse-dotfile-default_action-option)"
+}
+
+parse-dotfile-root_link-option() {
+  local dotfile="$DOTFILE"
+  if [ -n "$1" ]; then dotfile="$1"; fi
+
+  # Set default.
+  local root_link=".dotfiles"
+
+  while read line; do
+    if [[ "$line" == "root_link "* ]]; then
+      root_link="$(trim "${line/#root_link /}")"
+      break
+    fi
+  done < "$dotfile"
+
+  echo "$root_link"
+}
+
+parse-dotfile-default_action-option() {
+  local dotfile="$DOTFILE"
+  if [ -n "$1" ]; then dotfile="$1"; fi
+
+  # Set default value.
+  default_action="link"
+
+  while read line; do
+    if [[ "$line" == "default_action "* ]]; then
+      default_action="$(trim "${line/#default_action /}")"
+      break
+    fi
+  done < "$dotfile"
+
+  echo "$default_action"
+}
+
 locate-dotfile() {
   if [ -n "$DOTFILE" ]; then
     if [ ! -f "$DOTFILE" ]; then
@@ -146,68 +185,44 @@ locate-target() {
   fi
 }
 
-create-rootlink() {
-  local root="$1"
-  local rootlink="$2"
-}
-
 create-symlink() {
   local source="$1"
   local target="$2"
 }
 
-parse-dotfile() {
-  local dotfile="$1"
-  local target="$2"
-  local rootlink="$(parse-dotfile-rootlink "$dotfile")"
+execute-dotfile() {
+  parse-dotfile-options
+  local root_dir="$(dirname "$DOTFILE")"
 
-  local rootdir="$(dirname "$dotfile")"
   local cwd="$(pwd)"
-  cd "$rootdir"
+  cd "$root_dir"
 
-  create-rootlink "$rootdir" "$target/$rootlink"
+  create-symlink "$root_dir" "$TARGET/$OPT_ROOT_LINK"
   if [ -n "$?" ]; then return 1; fi
 
   while read line; do
-    parse-dotfile-line "$dotfile" "$target" "$rootdir" "$rootlink" "$line"
+    parse-dotfile-line "$line"
     if [ -n "$?" ]; then return 1; fi
-  done < "$dotfile"
+  done < "$DOTFILE"
 
   cd "$cwd"
 }
 
-parse-dotfile-rootlink() {
-  local dotfile="$1"
-  local rootlink
-
-  while read line; do
-    if [[ "$line" == "root_link "* ]]; then
-      rootlink=${line/#root_link /}
-      break
-    fi
-  done < "$dotfile"
-
-  if [ -z "$rootlink" ]; then rootlink=".dotfiles"; fi
-
-  echo "$root_link"
-}
-
 parse-dotfile-line() {
-  local dotfile="$1"
-  local target="$2"
-  local rootdir="$3"
-  local rootlink="$4"
-  local line="$5"
+  local line="$(trim "$1")"
+  local dotfile="$DOTFILE"
+  if [ -n "$2" ]; then dotfile="$2"; fi
 
   # Ignore comment lines starting with "#".
   if [[ "$line" == "#"* ]]; then return 0; fi
 
-  # Ignore root link command.
+  # Ignore Dotfile options.
   if [[ "$line" == "root_link "* ]]; then return 0; fi
+  if [[ "$line" == "default_action "* ]]; then return 0; fi
 
   # Handle include command.
   if [[ "$line" == "include "* ]]; then
-    include-dotfile "${line/#include /}" "$target" "$rootdir" "$rootlink"
+    include-dotfile "$(trim "${line/#include /}")"
     return "$?"
   fi
 
@@ -216,12 +231,10 @@ parse-dotfile-line() {
 
 include-dotfile() {
   local dotfile="$1"
-  local target="$2"
-  local rootdir="$3"
-  local rootlink="$4"
+  local root_dir="$(dirname "$dotfile")"
 
   local cwd="$(pwd)"
-  cd "$rootdir"
+  cd "$root_dir"
 
   if [ ! -f "$dotfile" ]; then
     echo "ERROR: Can not include \"$dotfile\", it does not exist." >&2
@@ -229,7 +242,7 @@ include-dotfile() {
   fi
 
   while read line; do
-    parse-dotfile-line "$dotfile" "$target" "$rootdir" "$rootlink" "$line"
+    parse-dotfile-line "$line" "$dotfile"
     if [ -n "$?" ]; then return 1; fi
   done < "$dotfile"
 
@@ -268,13 +281,13 @@ dotify-info() {
 }
 
 dotify-install() {
-  local dotfile="$(locate-dotfile)"
-  if [ -z "$dotfile" ]; then return 1; fi
+  locate-dotfile
+  if [ -n "$?" ]; then return 1; fi
 
-  local target="$(locate-target)"
-  if [ -z "$target" ]; then return 1; fi
+  locate-target
+  if [ -n "$?" ]; then return 1; fi
 
-  parse-dotfile "$dotfile" "$target"
+  execute-dotfile
   return $?
 }
 
