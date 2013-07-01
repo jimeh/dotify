@@ -81,7 +81,7 @@ parse-dotfile-default_action-option() {
 }
 
 parse-dotfile-line() {
-  local line="$1"
+  local line="$(trim "$1")"
   local dotfile="$DOTFILE"
   if [ -n "$2" ]; then dotfile="$2"; fi
 
