@@ -28,58 +28,45 @@ locate-target() {
   fi
 }
 
-create-rootlink() {
-  local root="$1"
-  local rootlink="$2"
-}
-
 create-symlink() {
   local source="$1"
   local target="$2"
 }
 
-parse-dotfile() {
-  local dotfile="$1"
-  local target="$2"
-  local rootlink="$(parse-dotfile-rootlink "$dotfile")"
+execute-dotfile() {
+  parse-dotfile-rootlink
+  ROOTDIR="$(dirname "$DOTFILE")"
 
-  local rootdir="$(dirname "$dotfile")"
   local cwd="$(pwd)"
   cd "$rootdir"
 
-  create-rootlink "$rootdir" "$target/$rootlink"
+  create-symlink "$rootdir" "$TARGET/$ROOTLINK"
   if [ -n "$?" ]; then return 1; fi
 
   while read line; do
-    parse-dotfile-line "$dotfile" "$target" "$rootdir" "$rootlink" "$line"
+    parse-dotfile-line "$line"
     if [ -n "$?" ]; then return 1; fi
-  done < "$dotfile"
+  done < "$DOTFILE"
 
   cd "$cwd"
 }
 
 parse-dotfile-rootlink() {
-  local dotfile="$1"
-  local rootlink
-
   while read line; do
     if [[ "$line" == "root_link "* ]]; then
-      rootlink=${line/#root_link /}
+      ROOTLINK="$(trim "${line/#root_link /}")"
       break
     fi
-  done < "$dotfile"
+  done < "$DOTFILE"
 
-  if [ -z "$rootlink" ]; then rootlink=".dotfiles"; fi
-
-  echo "$root_link"
+  if [ -z "$ROOTLINK" ]; then ROOTLINK=".dotfiles"; fi
+  echo "$ROOTLINK"
 }
 
 parse-dotfile-line() {
-  local dotfile="$1"
-  local target="$2"
-  local rootdir="$3"
-  local rootlink="$4"
-  local line="$5"
+  local line="$1"
+  local dotfile="$DOTFILE"
+  if [ -n "$2" ]; then dotfile="$2"; fi
 
   # Ignore comment lines starting with "#".
   if [[ "$line" == "#"* ]]; then return 0; fi
@@ -89,7 +76,7 @@ parse-dotfile-line() {
 
   # Handle include command.
   if [[ "$line" == "include "* ]]; then
-    include-dotfile "${line/#include /}" "$target" "$rootdir" "$rootlink"
+    include-dotfile "$(trim "${line/#include /}")"
     return "$?"
   fi
 
@@ -98,9 +85,6 @@ parse-dotfile-line() {
 
 include-dotfile() {
   local dotfile="$1"
-  local target="$2"
-  local rootdir="$3"
-  local rootlink="$4"
 
   local cwd="$(pwd)"
   cd "$rootdir"
@@ -111,7 +95,7 @@ include-dotfile() {
   fi
 
   while read line; do
-    parse-dotfile-line "$dotfile" "$target" "$rootdir" "$rootlink" "$line"
+    parse-dotfile-line "$line" "$dotfile"
     if [ -n "$?" ]; then return 1; fi
   done < "$dotfile"
 
