@@ -1,12 +1,6 @@
 #! /usr/bin/env bash
-source "../assert.sh"
-
+source "../test-helper.sh"
 source "../../src/lib/internals.sh"
-
-# silent shortcut to "cd -"
-cd-back() {
-  cd - 1>/dev/null
-}
 
 #
 # locate-dotfile()
