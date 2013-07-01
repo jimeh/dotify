@@ -1,6 +1,5 @@
 #! /usr/bin/env bash
-source "../assert.sh"
-
+source "../test-helper.sh"
 source "../../src/lib/trim.sh"
 
 assert 'trim "  foo bar  "' "foo bar"
