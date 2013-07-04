@@ -7,8 +7,7 @@ source "../../src/lib/internals.sh"
 #
 
 # Create temp files/folders used for locate-dotfile() tests.
-mkdir -p "test-tmp/without"
-mkdir -p "test-tmp/with"
+mkdir -p "test-tmp/with" "test-tmp/without"
 touch "test-tmp/with/Dotfile"
 
 # When $DOTFILE is empty and current path has a Dotfile.
@@ -43,9 +42,7 @@ unset DOTFILE
 
 # Remove temp files/folders used for locate-dotfile() tests.
 rm "test-tmp/with/Dotfile"
-rmdir "test-tmp/with"
-rmdir "test-tmp/without"
-rmdir "test-tmp"
+rmdir "test-tmp/with" "test-tmp/without" "test-tmp"
 
 # Ensure temp files/folder were cleaned up.
 assert_raises "test -d test-tmp" 1
