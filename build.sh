@@ -54,13 +54,16 @@ while IFS= read line; do
     line="$(trim "$line")"
     file="${line/#source \"/}"
     file="${file/%\"/}"
-    output="${output}$(cat "$file")\n\n"
+    output="${output}$(cat "$file")
+
+"
   else
     # Append line to output.
-    output="${output}${line}\n"
+    output="${output}${line}
+"
   fi
 done < "$source"
 
 cd "$root"
-echo -e "$output" > "$target"
+echo -n "$output" > "$target"
 chmod +x "$target"
