@@ -68,6 +68,7 @@ source "../plugins/git.sh"
 DOTFILE="" # --dotfile / -f
 TARGET=""  # --target  / -t
 HELP=""    # --help    / -h
+FORCE=""   # --force   / -F
 VERSION="" # --version / -v
 
 if has-argument dotfile f "$@"; then
@@ -80,6 +81,10 @@ fi
 
 if has-argument help h "$@"; then
   HELP="1"
+fi
+
+if has-argument force F "$@"; then
+  FORCE="1"
 fi
 
 if has-argument version v "$@"; then
