@@ -22,9 +22,11 @@ abs_dirname() {
 testdir="$(abs_dirname "$0")"
 testfiles="$(find "$testdir" -name "*-test.sh")"
 
+RET=0
 for testfile in $testfiles; do
   echo "running: ${testfile/#$(dirname "$testdir")\//}"
   cd "$(dirname "$testfile")"
   "$testfile"
-  echo ""
+  if [ "$?" != "0" ]; then RET=1; fi
 done
+exit $RET
