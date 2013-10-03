@@ -1,5 +1,6 @@
 #! /usr/bin/env bash
 set -e
+shopt -s extglob
 [ -n "$DOTIFY_DEBUG" ] && set -x
 
 # dotify {{VERSION}}
@@ -50,6 +51,7 @@ source "../lib/internals/parse-dotfile-options.sh"
 source "../lib/dotify-version.sh"
 source "../lib/dotify-help.sh"
 source "../lib/dotify-info.sh"
+source "../lib/dotify-compile.sh"
 source "../lib/dotify-install.sh"
 
 #
@@ -113,6 +115,9 @@ fi
 case "$command" in
   "info" )
     dotify-info
+    ;;
+  "compile" )
+    dotify-compile
     ;;
   "" | "install" )
     dotify-install
