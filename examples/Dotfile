@@ -7,11 +7,10 @@ root_link .dotfiles
 # assumed.
 default_action link
 
-# Actions are formatted as "<action>: <data>". The link action is the most
-# commonly used one, and it's data format is "<source> -> <target>". Source
-# being relative to the directory the Dotfile is located in, and target
-# relative to your home folder. The link action creates symlinks via the root
-# link.
+# Actions are formatted as "<action>: <source> -> <target>". The link action
+# is the most commonly used one. Source being relative to the directory the
+# Dotfile is located in, and target relative to your home folder. The link
+# action creates symlinks via the root link.
 link: arkrc -> .arkrc
 
 # With no action specified, the default action is assumed, in this case that
@@ -33,20 +32,25 @@ tmux.conf -> .tmux.conf
 load_shellrc.sh -> .profile
 load_shellrc.sh -> .zshrc
 
-# Wild-cards can be used in source, but target has to then be a directory
-# instead of a file name.
-launch_agents/*.plist -> Library/LaunchAgents/
+# Bash-style if conditions and similar things as usable, as a Dotfile is
+# compiled into a normal Bash script before it is executed.
+if [ "$(hostname)" == "air.local" ]; then
+  # Wild-cards can be used in source, but target has to then be a directory
+  # instead of a file name.
+  launch_agents/*.plist -> Library/LaunchAgents/
 
-# The git action clones git repositories to a path relative from your home
-# folder. If you want external git repos to be cloned into your dotfiles, use
-# git submodules instead.
-git: https://github.com/sstephenson/rbenv.git -> .rbenv
+  # The git action clones git repositories to a path relative from your home
+  # folder. If you want external git repos to be cloned into your dotfiles,
+  # use git submodules instead.
+  git: https://github.com/sstephenson/rbenv.git -> .rbenv
 
-# Wrap long lines by ending a line with a backslash.
-git: https://github.com/sstephenson/ruby-build.git -> \
-     .rbenv/plugins/ruby-build
+  # Wrap long lines by ending a line with a backslash.
+  git: https://github.com/sstephenson/ruby-build.git -> \
+       .rbenv/plugins/ruby-build
+fi
 
 # Include and parse additional Dotfiles. Useful if your main dotfiles repo is
 # public, and you have a private set of dotfiles for SSH keys and the like
-# that you pull into your public repo via a git submodule.
+# that you pull into your public repo via a git submodule. The path is
+# relative to the folder of the the current Dotfile.
 include private/Dotfile
