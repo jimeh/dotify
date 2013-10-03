@@ -4,7 +4,7 @@ source "../../src/lib/arguments.sh"
 
 
 #
-# has-argument()
+# has-argument() tests
 #
 
 # Returns 1 when it does not have argument.
@@ -20,7 +20,7 @@ assert_end "has-argument()"
 
 
 #
-# parse-argument()
+# parse-argument() tests
 #
 
 # Echos nothing and returns 1 when argument is not present.

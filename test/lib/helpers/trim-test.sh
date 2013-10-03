@@ -2,6 +2,10 @@
 source "../test-helper.sh"
 source "../../src/lib/trim.sh"
 
+#
+# trim() tests
+#
+
 assert 'trim "  foo bar  "' "foo bar"
 assert 'trim "foo bar  "' "foo bar"
 assert 'trim "  foo bar"' "foo bar"
