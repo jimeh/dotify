@@ -1,7 +1,17 @@
 # Parse Dotfile options and set relevant global variables.
 parse-dotfile-options() {
-  OPT_ROOT_LINK="$(parse-dotfile-root_link-option)"
-  OPT_DEFAULT_ACTION="$(parse-dotfile-default_action-option)"
+  DOTIFY_OPT_ROOT_LINK="$(parse-dotfile-root_link-option)"
+  DOTIFY_OPT_DEFAULT_ACTION="$(parse-dotfile-default_action-option)"
+}
+
+# Parse root_link option.
+parse-dotfile-root_link-option() {
+  echo "$(parse-dotfile-option "root_link" ".dotfiles" "$1")"
+}
+
+# Parse default_action option.
+parse-dotfile-default_action-option() {
+  echo "$(parse-dotfile-option "default_action" "link" "$1")"
 }
 
 # Extract a specific option from Dotfile.
@@ -17,6 +27,7 @@ parse-dotfile-option() {
   local dotfile="$3"
   if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
 
+  local line=""
   while read line; do
     if [[ "$line" == "$name "* ]]; then
       value="$(trim "${line/#$name }")"
@@ -25,12 +36,4 @@ parse-dotfile-option() {
   done < "$dotfile"
 
   echo "$value"
-}
-
-parse-dotfile-root_link-option() {
-  echo "$(parse-dotfile-option "root_link" ".dotfiles" "$1")"
-}
-
-parse-dotfile-default_action-option() {
-  echo "$(parse-dotfile-option "default_action" "link" "$1")"
 }

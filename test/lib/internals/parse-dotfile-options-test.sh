@@ -4,7 +4,7 @@ source "../../src/lib/parse-dotfile-options.sh"
 source "../../src/lib/trim.sh"
 
 #
-# parse-dotfile-options()
+# parse-dotfile-options() tests
 #
 
 stub "parse-dotfile-root_link-option"
@@ -24,7 +24,7 @@ assert_end "parse-dotfile-options()"
 
 
 #
-# parse-dotfile-option()
+# parse-dotfile-option() tests
 #
 
 # Create temp files/folders used for locate-dotfile() tests.
@@ -62,7 +62,7 @@ assert_end "parse-dotfile-option()"
 
 
 #
-# parse-dotfile-root_link-option()
+# parse-dotfile-root_link-option() tests
 #
 
 stub "parse-dotfile-option"
@@ -76,7 +76,7 @@ assert_end "parse-dotfile-root_link-option()"
 
 
 #
-# parse-dotfile-default_action-option()
+# parse-dotfile-default_action-option() tests
 #
 
 stub "parse-dotfile-option"

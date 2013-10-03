@@ -37,8 +37,11 @@ source "../lib/trim.sh"
 # Internal functions
 #
 
-source "../lib/parse-dotfile-options.sh"
-source "../lib/internals.sh"
+source "../lib/internals/compile-dotfile.sh"
+source "../lib/internals/create-symlink.sh"
+source "../lib/internals/locate-dotfile.sh"
+source "../lib/internals/locate-target.sh"
+source "../lib/internals/parse-dotfile-options.sh"
 
 #
 # Command functions
