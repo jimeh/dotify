@@ -67,8 +67,9 @@ source "../plugins/git.sh"
 
 DOTFILE="" # --dotfile / -F
 TARGET=""  # --target  / -t
-HELP=""    # --help    / -h
 FORCE=""   # --force   / -f
+DRY_RUN="" # --dry-run / -d
+HELP=""    # --help    / -h
 VERSION="" # --version / -v
 
 if has-argument dotfile F "$@"; then
@@ -79,12 +80,16 @@ if has-argument target t "$@"; then
   TARGET="$(parse-argument target t "$@")"
 fi
 
-if has-argument help h "$@"; then
-  HELP="1"
+if has-argument dry-run d "$@"; then
+  DRY_RUN="1"
 fi
 
 if has-argument force f "$@"; then
   FORCE="1"
+fi
+
+if has-argument help h "$@"; then
+  HELP="1"
 fi
 
 if has-argument version v "$@"; then
