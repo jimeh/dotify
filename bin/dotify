@@ -1,5 +1,6 @@
 #! /usr/bin/env bash
 set -e
+shopt -s extglob
 [ -n "$DOTIFY_DEBUG" ] && set -x
 
 # dotify 0.0.1
@@ -116,43 +117,65 @@ trim() {
 # Internal functions
 #
 
-parse-dotfile-options() {
-  OPT_ROOT_LINK="$(parse-dotfile-root_link-option)"
-  OPT_DEFAULT_ACTION="$(parse-dotfile-default_action-option)"
-}
+compile-dotfile() {
+  local dotfile="$1"
+  if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
 
-parse-dotfile-root_link-option() {
-  local dotfile="$DOTFILE"
-  if [ -n "$1" ]; then dotfile="$1"; fi
+  local output=""
+  local line=""
+  while IFS= read line; do
+    # Ignore comments and blank lines.
+    if [[ "$line" =~ ^(\ *\#.*|\ *)$ ]]; then
+      continue
 
-  # Set default.
-  local root_link=".dotfiles"
+    # Parse "<action>: <source> -> <target>" lines.
+    elif [[ "$line" =~ ^(\ +)?([a-zA-Z0-9_-]+):\ (.+)\ +-[\>]\ +(.+)$ ]]; then
+      output="${output}${BASH_REMATCH[1]}dotify-action ${BASH_REMATCH[2]} "
+      output="${output}$(trim "${BASH_REMATCH[3]}") "
+      output="${output}$(trim "${BASH_REMATCH[4]}")\n"
 
-  while read line; do
-    if [[ "$line" == "root_link "* ]]; then
-      root_link="$(trim "${line/#root_link /}")"
-      break
+    # Parse "<source> -> <target>" lines.
+    elif [[ "$line" =~ ^(\ +)?(.+)\ -[\>]\ (.+)$ ]]; then
+      output="${output}${BASH_REMATCH[1]}dotify-action default "
+      output="${output}$(trim "${BASH_REMATCH[2]}") "
+      output="${output}$(trim "${BASH_REMATCH[3]}")\n"
+
+    # Append line without modifications.
+    else
+      output="${output}${line}\n"
     fi
   done < "$dotfile"
 
-  echo "$root_link"
+  echo -e "$output"
 }
 
-parse-dotfile-default_action-option() {
-  local dotfile="$DOTFILE"
-  if [ -n "$1" ]; then dotfile="$1"; fi
+create-symlink() {
+  local source="$1"
+  local target="$2"
 
-  # Set default value.
-  default_action="link"
-
-  while read line; do
-    if [[ "$line" == "default_action "* ]]; then
-      default_action="$(trim "${line/#default_action /}")"
-      break
+  if [ ! -e "$target" ] && [ ! -h "$target" ]; then
+    ln -s "$source" "$target"
+    return 0
+  elif [ -h "$target" ]; then
+    if [ "$(readlink "$target")" != "$source" ]; then
+      echo "ERROR: \"$target\" exists, is a symlink to:" \
+        "$(readlink "$target")" >&2
+      return 1
     fi
-  done < "$dotfile"
+  else
+    echo "ERROR: \"$target\" exists" >&2
+    return 1
+  fi
+}
 
-  echo "$default_action"
+execute-dotfile() {
+  local dotfile_source="$(dotify-compile)"
+
+  locate-target
+  if [ "$?" != "0" ]; then return 1; fi
+
+  echo "$dotfile_source"
+  return $?
 }
 
 locate-dotfile() {
@@ -185,68 +208,44 @@ locate-target() {
   fi
 }
 
-create-symlink() {
-  local source="$1"
-  local target="$2"
+# Parse Dotfile options and set relevant global variables.
+parse-dotfile-options() {
+  DOTIFY_OPT_ROOT_LINK="$(parse-dotfile-root_link-option)"
+  DOTIFY_OPT_DEFAULT_ACTION="$(parse-dotfile-default_action-option)"
 }
 
-execute-dotfile() {
-  parse-dotfile-options
-  local root_dir="$(dirname "$DOTFILE")"
+# Parse root_link option.
+parse-dotfile-root_link-option() {
+  echo "$(parse-dotfile-option "root_link" ".dotfiles" "$1")"
+}
 
-  local cwd="$(pwd)"
-  cd "$root_dir"
+# Parse default_action option.
+parse-dotfile-default_action-option() {
+  echo "$(parse-dotfile-option "default_action" "link" "$1")"
+}
 
-  create-symlink "$root_dir" "$TARGET/$OPT_ROOT_LINK"
-  if [ -n "$?" ]; then return 1; fi
+# Extract a specific option from Dotfile.
+#
+# Arguments:
+#   - $1: Name of option to extract.
+#   - $2: (optional) Default value of option if not present in Dotfile.
+#   - $3: (optional) Specific Dotfile to read. Uses $DOTFILE if empty.
+#
+parse-dotfile-option() {
+  local name="$1"
+  local value="$2"
+  local dotfile="$3"
+  if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
 
+  local line=""
   while read line; do
-    parse-dotfile-line "$line"
-    if [ -n "$?" ]; then return 1; fi
-  done < "$DOTFILE"
-
-  cd "$cwd"
-}
-
-parse-dotfile-line() {
-  local line="$(trim "$1")"
-  local dotfile="$DOTFILE"
-  if [ -n "$2" ]; then dotfile="$2"; fi
-
-  # Ignore comment lines starting with "#".
-  if [[ "$line" == "#"* ]]; then return 0; fi
-
-  # Ignore Dotfile options.
-  if [[ "$line" == "root_link "* ]]; then return 0; fi
-  if [[ "$line" == "default_action "* ]]; then return 0; fi
-
-  # Handle include command.
-  if [[ "$line" == "include "* ]]; then
-    include-dotfile "$(trim "${line/#include /}")"
-    return "$?"
-  fi
-
-  echo "$line"
-}
-
-include-dotfile() {
-  local dotfile="$1"
-  local root_dir="$(dirname "$dotfile")"
-
-  local cwd="$(pwd)"
-  cd "$root_dir"
-
-  if [ ! -f "$dotfile" ]; then
-    echo "ERROR: Can not include \"$dotfile\", it does not exist." >&2
-    return 1
-  fi
-
-  while read line; do
-    parse-dotfile-line "$line" "$dotfile"
-    if [ -n "$?" ]; then return 1; fi
+    if [[ "$line" == "$name "* ]]; then
+      value="$(trim "${line/#$name }")"
+      break
+    fi
   done < "$dotfile"
 
-  cd "$cwd"
+  echo "$value"
 }
 
 
@@ -268,27 +267,43 @@ dotify-help() {
 }
 
 dotify-info() {
-  local dotfile="$(locate-dotfile "$@")"
-  if [ -z "$dotfile" ]; then return 1; fi
+  locate-dotfile
+  if [ "$?" != "0" ]; then return 1; fi
 
-  local target="$(locate-target "$@")"
-  if [ -z "$target" ]; then return 1; fi
+  locate-target
+  if [ "$?" != "0" ]; then return 1; fi
 
-  echo "dotify $(dotify-version)"
-  echo "  Dotfile: $dotfile"
-  echo "     Root: $(dirname "$dotfile")"
-  echo "   Target: $target"
+  echo "$(dotify-print-version)"
+  echo "  Dotfile: $DOTFILE"
+  echo "     Root: $(dirname "$DOTFILE")"
+  echo "   Target: $TARGET"
+}
+
+dotify-compile() {
+  locate-dotfile
+  if [ "$?" != "0" ]; then return 1; fi
+
+  compile-dotfile
+  return $?
 }
 
 dotify-install() {
-  locate-dotfile
-  if [ -n "$?" ]; then return 1; fi
-
-  locate-target
-  if [ -n "$?" ]; then return 1; fi
-
+  DOTIFY_RUN_MODE="install"
   execute-dotfile
   return $?
+}
+
+
+#
+# Built-in Plugins
+#
+
+dotify-action-link() {
+  echo "link: $@"
+}
+
+dotify-action-git() {
+  echo "git: $@"
 }
 
 
@@ -296,17 +311,27 @@ dotify-install() {
 # Argument Parsing
 #
 
-DOTFILE="" # --dotfile / -f
+DOTFILE="" # --dotfile / -F
 TARGET=""  # --target  / -t
+FORCE=""   # --force   / -f
+DRY_RUN="" # --dry-run / -d
 HELP=""    # --help    / -h
 VERSION="" # --version / -v
 
-if has-argument dotfile f "$@"; then
-  DOTFILE="$(parse-argument dotfile f "$@")"
+if has-argument dotfile F "$@"; then
+  DOTFILE="$(parse-argument dotfile F "$@")"
 fi
 
 if has-argument target t "$@"; then
   TARGET="$(parse-argument target t "$@")"
+fi
+
+if has-argument dry-run d "$@"; then
+  DRY_RUN="1"
+fi
+
+if has-argument force f "$@"; then
+  FORCE="1"
 fi
 
 if has-argument help h "$@"; then
@@ -324,7 +349,11 @@ fi
 
 # Command is first argument that does not start with a dash or plus.
 for arg in "$@"; do
-  if [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
+  if [ -n "$skip_next" ]; then
+    skip_next=
+  elif [[ "$arg" =~ ^(--dotfile|-f|--taraget|-t)$ ]]; then
+    skip_next=1
+  elif [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
     command="$arg"
     break
   fi
@@ -347,10 +376,15 @@ case "$command" in
   "info" )
     dotify-info
     ;;
+  "compile" )
+    dotify-compile
+    ;;
   "" | "install" )
     dotify-install
+    ;;
+  "uninstall" | "remove" )
+    dotify-uninstall
     ;;
 esac
 
 exit $?
-
