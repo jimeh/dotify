@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
-source "../test-helper.sh"
-source "../../src/lib/trim.sh"
+source "../../test-helper.sh"
+source "../../../src/lib/helpers/trim.sh"
 
 #
 # trim() tests

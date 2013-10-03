@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 source "../../test-helper.sh"
-source "../../../src/lib/internals.sh"
+source "../../../src/lib/internals/create-symlink.sh"
 
 #
 # create-symlink() tests
