@@ -40,6 +40,7 @@ source "../lib/trim.sh"
 
 source "../lib/internals/compile-dotfile.sh"
 source "../lib/internals/create-symlink.sh"
+source "../lib/internals/execute-dotfile.sh"
 source "../lib/internals/locate-dotfile.sh"
 source "../lib/internals/locate-target.sh"
 source "../lib/internals/parse-dotfile-options.sh"
