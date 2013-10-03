@@ -31,8 +31,8 @@ shopt -s extglob
 # Helper functions
 #
 
-source "../lib/arguments.sh"
-source "../lib/trim.sh"
+source "../lib/helpers/arguments.sh"
+source "../lib/helpers/trim.sh"
 
 #
 # Internal functions

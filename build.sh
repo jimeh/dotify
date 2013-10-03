@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 source "src/lib/dotify-version.sh"
-source "src/lib/trim.sh"
+source "src/lib/helpers/trim.sh"
 
 resolve_link() {
   $(type -p greadlink readlink | head -1) $1
