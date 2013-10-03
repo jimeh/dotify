@@ -11,9 +11,9 @@ stub "parse-dotfile-root_link-option"
 stub "parse-dotfile-default_action-option"
 
 parse-dotfile-options
-assert 'echo "$OPT_ROOT_LINK"' \
+assert 'echo "$DOTIFY_OPT_ROOT_LINK"' \
   "parse-dotfile-root_link-option stub: "
-assert 'echo "$OPT_DEFAULT_ACTION"' \
+assert 'echo "$DOTIFY_OPT_DEFAULT_ACTION"' \
   "parse-dotfile-default_action-option stub: "
 
 restore "parse-dotfile-root_link-option"
