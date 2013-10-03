@@ -253,12 +253,18 @@ parse-dotfile-option() {
 # Command functions
 #
 
-dotify-version() {
-  echo "0.0.1"
+dotify-clean() {
+  DOTIFY_RUN_MODE="clean"
+  execute-dotfile
+  return $?
 }
 
-dotify-print-version() {
-  echo "dotify $(dotify-version)"
+dotify-compile() {
+  locate-dotfile
+  if [ "$?" != "0" ]; then return 1; fi
+
+  compile-dotfile
+  return $?
 }
 
 dotify-help() {
@@ -279,18 +285,24 @@ dotify-info() {
   echo "   Target: $TARGET"
 }
 
-dotify-compile() {
-  locate-dotfile
-  if [ "$?" != "0" ]; then return 1; fi
-
-  compile-dotfile
-  return $?
-}
-
 dotify-install() {
   DOTIFY_RUN_MODE="install"
   execute-dotfile
   return $?
+}
+
+dotify-uninstall() {
+  DOTIFY_RUN_MODE="uninstall"
+  execute-dotfile
+  return $?
+}
+
+dotify-version() {
+  echo "0.0.1"
+}
+
+dotify-print-version() {
+  echo "dotify $(dotify-version)"
 }
 
 
