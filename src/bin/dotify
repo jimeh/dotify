@@ -65,14 +65,14 @@ source "../plugins/git.sh"
 # Argument Parsing
 #
 
-DOTFILE="" # --dotfile / -f
+DOTFILE="" # --dotfile / -F
 TARGET=""  # --target  / -t
 HELP=""    # --help    / -h
-FORCE=""   # --force   / -F
+FORCE=""   # --force   / -f
 VERSION="" # --version / -v
 
-if has-argument dotfile f "$@"; then
-  DOTFILE="$(parse-argument dotfile f "$@")"
+if has-argument dotfile F "$@"; then
+  DOTFILE="$(parse-argument dotfile F "$@")"
 fi
 
 if has-argument target t "$@"; then
@@ -83,7 +83,7 @@ if has-argument help h "$@"; then
   HELP="1"
 fi
 
-if has-argument force F "$@"; then
+if has-argument force f "$@"; then
   FORCE="1"
 fi
 
@@ -130,6 +130,9 @@ case "$command" in
     ;;
   "" | "install" )
     dotify-install
+    ;;
+  "uninstall" | "remove" )
+    dotify-uninstall
     ;;
 esac
 
