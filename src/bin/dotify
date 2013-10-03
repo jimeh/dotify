@@ -53,6 +53,13 @@ source "../lib/dotify-info.sh"
 source "../lib/dotify-install.sh"
 
 #
+# Built-in Plugins
+#
+
+source "../plugins/link.sh"
+source "../plugins/git.sh"
+
+#
 # Argument Parsing
 #
 
