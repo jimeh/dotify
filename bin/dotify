@@ -397,6 +397,9 @@ case "$command" in
   "uninstall" | "remove" )
     dotify-uninstall
     ;;
+  "clean" )
+    dotify-clean
+    ;;
 esac
 
 exit $?
