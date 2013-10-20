@@ -48,6 +48,7 @@ source "../lib/internals/locate-target.sh"
 # Command functions
 #
 
+source "../lib/dotify-action.sh"
 source "../lib/dotify-clean.sh"
 source "../lib/dotify-compile.sh"
 source "../lib/dotify-help.sh"
@@ -62,6 +63,21 @@ source "../lib/dotify-version.sh"
 
 source "../plugins/link.sh"
 source "../plugins/git.sh"
+
+#
+# Dotfile commands
+#
+
+source "../lib/dotfile-commands/root_link.sh"
+source "../lib/dotfile-commands/default_action.sh"
+source "../lib/dotfile-commands/include.sh"
+
+#
+# Default Options
+#
+
+DOTIFY_OPT_ROOT_LINK=".dotfiles"
+DOTIFY_OPT_DEFAULT_ACTION="link"
 
 #
 # Argument Parsing
