@@ -1,4 +1,4 @@
-# By default the root path if your dot files (the folder the Dotfile is
+# By default the root path of your dot files (the folder the Dotfile is
 # located in) is symlinked to "~/.dotfiles". Using the "root_link" option, the
 # name of the root symlink can be customized.
 root_link .dotfiles
@@ -11,7 +11,7 @@ default_action link
 # is the most commonly used one. Source being relative to the directory the
 # Dotfile is located in, and target relative to your home folder. The link
 # action creates symlinks via the root link.
-link: arkrc -> .arkrc
+link: ackrc -> .ackrc
 
 # With no action specified, the default action is assumed, in this case that
 # would be the link action.
@@ -37,7 +37,7 @@ load_shellrc.sh -> .zshrc
 if [ "$(hostname)" == "air.local" ]; then
   # Wild-cards can be used in source, but target has to then be a directory
   # instead of a file name.
-  launch_agents/*.plist -> Library/LaunchAgents/
+  "launch_agents/*.plist" -> Library/LaunchAgents/
 
   # The git action clones git repositories to a path relative from your home
   # folder. If you want external git repos to be cloned into your dotfiles,
