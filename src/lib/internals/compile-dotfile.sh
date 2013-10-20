@@ -2,6 +2,11 @@ compile-dotfile() {
   local dotfile="$1"
   if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
 
+  if [ ! -f "$dotfile" ]; then
+    echo "ERROR: \"$dotfile\" does not exist." >&2
+    return 1
+  fi
+
   local output=""
   local line=""
   while IFS= read line; do
