@@ -19,7 +19,7 @@ abs_dirname() {
 }
 
 
-testdir="$(abs_dirname "$0")"
+testdir="$(abs_dirname "$0")/test"
 testfiles="$(find "$testdir" -name "*-test.sh")"
 
 RET=0

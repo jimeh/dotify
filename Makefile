@@ -2,7 +2,7 @@ build:
 	./build.sh
 
 test: build
-	test/run.sh
+	./test.sh
 
 .SILENT:
 .PHONY: build test
