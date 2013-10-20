@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 source "../../test-helper.sh"
-source "../../../src/lib/internals/parse-dotfile-options.sh"
 source "../../../src/lib/helpers/trim.sh"
+source "../../../src/lib/internals/parse-dotfile-options.sh"
 
 #
 # parse-dotfile-options() tests
