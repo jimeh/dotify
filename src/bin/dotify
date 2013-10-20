@@ -3,10 +3,10 @@ set -e
 shopt -s extglob
 [ -n "$DOTIFY_DEBUG" ] && set -x
 
-# dotify {{VERSION}}
+# dotify {{DOTIFY_VERSION}}
 # https://github.com/jimeh/dotify
 #
-# Copyright (c) 2013 Jim Myhrberg.
+# Copyright (c) {{COPYRIGHT_YEAR}} Jim Myhrberg.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to

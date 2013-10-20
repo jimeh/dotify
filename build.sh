@@ -45,8 +45,9 @@ output=""
 
 while IFS= read line; do
   if [[ "$line" == "#"* ]]; then
-    # Replace {{VERSION}} placeholder in comments.
-    line="${line/\{\{VERSION\}\}/$(dotify-version)}"
+    # Replace {{DOTIFY_VERSION}} placeholder in comments.
+    line="${line/\{\{DOTIFY_VERSION\}\}/$(dotify-version)}"
+    line="${line/\{\{COPYRIGHT_YEAR\}\}/$(date +"%Y")}"
   fi
 
   if [[ "$line" == "source \""*"\"" ]]; then
