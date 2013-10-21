@@ -3,5 +3,9 @@ dotify-action() {
   local source="$2"
   local target="$3"
 
-  echo "${action}: $source -> $target"
+  if [ "$action" == "default" ]; then
+    action="$DOTIFY_OPT_DEFAULT_ACTION"
+  fi
+
+  dotify-action-${action} "$source" "$target"
 }
