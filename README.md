@@ -1,6 +1,6 @@
 # Dotify
 
-Setup your dotfiles like a sane person. With a Dotfile ^_^
+Setup your dotfiles like a sane person. With a Dotfile:
 
 ```bash
 ackrc     -> .ackrc
@@ -11,6 +11,8 @@ if [ "$(uname)" == "Darwin" ]; then
   powconfig -> .powconfig
 fi
 ```
+
+Dotfiles are basically fancy bash shell scripts which are executed via Dotify.
 
 ## Overview
 
