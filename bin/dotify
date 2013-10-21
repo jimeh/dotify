@@ -179,7 +179,9 @@ execute-dotfile() {
   locate-target
   if [ "$?" != "0" ]; then return 1; fi
 
-  echo "$dotfile_source"
+  ROOT_DIR="$(dirname "$DOTFILE")"
+
+  eval "$dotfile_source"
   return $?
 }
 
@@ -213,50 +215,28 @@ locate-target() {
   fi
 }
 
-# Parse Dotfile options and set relevant global variables.
-parse-dotfile-options() {
-  DOTIFY_OPT_ROOT_LINK="$(parse-dotfile-root_link-option)"
-  DOTIFY_OPT_DEFAULT_ACTION="$(parse-dotfile-default_action-option)"
-}
-
-# Parse root_link option.
-parse-dotfile-root_link-option() {
-  echo "$(parse-dotfile-option "root_link" ".dotfiles" "$1")"
-}
-
-# Parse default_action option.
-parse-dotfile-default_action-option() {
-  echo "$(parse-dotfile-option "default_action" "link" "$1")"
-}
-
-# Extract a specific option from Dotfile.
-#
-# Arguments:
-#   - $1: Name of option to extract.
-#   - $2: (optional) Default value of option if not present in Dotfile.
-#   - $3: (optional) Specific Dotfile to read. Uses $DOTFILE if empty.
-#
-parse-dotfile-option() {
-  local name="$1"
-  local value="$2"
-  local dotfile="$3"
-  if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
-
-  local line=""
-  while read line; do
-    if [[ "$line" == "$name "* ]]; then
-      value="$(trim "${line/#$name }")"
-      break
-    fi
-  done < "$dotfile"
-
-  echo "$value"
-}
-
 
 #
 # Command functions
 #
+
+dotify-action() {
+  local action="$1"
+  local source="$2"
+  local target="$3"
+
+  if [ "$action" == "default" ]; then
+    action="$DOTIFY_OPT_DEFAULT_ACTION"
+  fi
+
+  ! valid_action="$(command -v "dotify-action-${action}")"
+  if [ -z "$valid_action" ]; then
+    echo "ERROR: \"$action\" is not a valid action." >&2
+    return 1
+  fi
+
+  dotify-action-${action} "$source" "$target"
+}
 
 dotify-clean() {
   DOTIFY_RUN_MODE="clean"
@@ -316,13 +296,61 @@ dotify-print-version() {
 #
 
 dotify-action-link() {
-  echo "link: $@"
+  if [ "$DOTIFY_RUN_MODE" == "install" ]; then
+    dotify-action-link-install $@
+  elif [ "$DOTIFY_RUN_MODE" == "uninstall" ]; then
+    dotify-action-link-uninstall $@
+  fi
+}
+
+dotify-action-link-install() {
+  echo "link install: $@"
+}
+
+dotify-action-link-uninstall() {
+  echo "link uninstall: $@"
 }
 
 dotify-action-git() {
-  echo "git: $@"
+  if [ "$DOTIFY_RUN_MODE" == "install" ]; then
+    dotify-action-git-install $@
+  elif [ "$DOTIFY_RUN_MODE" == "uninstall" ]; then
+    dotify-action-git-uninstall $@
+  fi
 }
 
+dotify-action-git-install() {
+  echo "git install: $@"
+}
+
+dotify-action-git-uninstall() {
+  echo "git uninstall: $@"
+}
+
+
+#
+# Dotfile commands
+#
+
+root_link () {
+  DOTIFY_OPT_ROOT_LINK="$@"
+}
+
+default_action() {
+  DOTIFY_OPT_DEFAULT_ACTION="$@"
+}
+
+include() {
+  echo "include: $@"
+}
+
+
+#
+# Default Options
+#
+
+DOTIFY_OPT_ROOT_LINK=".dotfiles"
+DOTIFY_OPT_DEFAULT_ACTION="link"
 
 #
 # Argument Parsing
