@@ -23,14 +23,14 @@ And lets say that repo looks something like this:
 
 ```
 .
-|-- dotify
-|-- Dotfile
-|-- hosts
-|   `-- mordor
-|       |-- Dotfile
-|       `-- gitconfig
-|-- irbrc
-`-- tmux.conf
+├── dotify
+├── Dotfile
+├── hosts
+│   └── mordor
+│       ├── Dotfile
+│       └── gitconfig
+├── irbrc
+└── tmux.conf
 ```
 
 The `dotify` file is Dotify's main executable, which is a small self-contained
@@ -62,9 +62,9 @@ run `./dotify install`, you'll end up with a home folder like this:
 
 ```
 .
-|-- .dotfiles -> /home/jimeh/src/dotfiles
-|-- .gitconfig -> .dotfiles/gitconfig
-|-- .irbrc -> .dotfiles/irbrc
-|-- .tmux.conf -> .dotfiles/tmux.conf
-`-- src
+├── .dotfiles -> /home/jimeh/src/dotfiles
+├── .gitconfig -> .dotfiles/gitconfig
+├── .irbrc -> .dotfiles/irbrc
+├── .tmux.conf -> .dotfiles/tmux.conf
+└── src
 ```
