@@ -63,7 +63,7 @@ run `./dotify install`, you'll end up with a home folder like this:
 ```
 .
 ├── .dotfiles -> /home/jimeh/src/dotfiles
-├── .gitconfig -> .dotfiles/gitconfig
+├── .gitconfig -> .dotfiles/hosts/mordor/gitconfig
 ├── .irbrc -> .dotfiles/irbrc
 ├── .tmux.conf -> .dotfiles/tmux.conf
 └── src
