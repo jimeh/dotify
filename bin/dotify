@@ -356,15 +356,14 @@ DOTIFY_OPT_DEFAULT_ACTION="link"
 # Argument Parsing
 #
 
-DOTFILE="" # --dotfile / -F
+DOTFILE="" # --dotfile / -f
 TARGET=""  # --target  / -t
-FORCE=""   # --force   / -f
 DRY_RUN="" # --dry-run / -d
 HELP=""    # --help    / -h
 VERSION="" # --version / -v
 
-if has-argument dotfile F "$@"; then
-  DOTFILE="$(parse-argument dotfile F "$@")"
+if has-argument dotfile f "$@"; then
+  DOTFILE="$(parse-argument dotfile f "$@")"
 fi
 
 if has-argument target t "$@"; then
@@ -373,10 +372,6 @@ fi
 
 if has-argument dry-run d "$@"; then
   DRY_RUN="1"
-fi
-
-if has-argument force f "$@"; then
-  FORCE="1"
 fi
 
 if has-argument help h "$@"; then
