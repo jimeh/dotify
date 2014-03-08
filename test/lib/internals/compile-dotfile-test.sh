@@ -39,6 +39,15 @@ dotify-action link ackrc .ackrc
 dotify-action link gitconfig \".gitconfig\""
 
 
+# Compiles standard actions without a <source>
+echo -e "root_link .dotfiles
+link: -> .ackrc
+link:-> \".gitconfig\"" > $dotfile
+assert "compile-dotfile $dotfile" "root_link .dotfiles
+dotify-action link .ackrc
+dotify-action link \".gitconfig\""
+
+
 # Compiles default (shorthand) actions
 echo -e "root_link .dotfiles
 link: ackrc -> .ackrc
@@ -46,6 +55,15 @@ gitconfig   -> \".gitconfig\"" > $dotfile
 assert "compile-dotfile $dotfile" "root_link .dotfiles
 dotify-action link ackrc .ackrc
 dotify-action default gitconfig \".gitconfig\""
+
+
+# Compiles default (shorthand) actions without a <source>
+echo -e "root_link .dotfiles
+-> .ackrc
+ -> \".gitconfig\"" > $dotfile
+assert "compile-dotfile $dotfile" "root_link .dotfiles
+dotify-action default .ackrc
+ dotify-action default \".gitconfig\""
 
 
 # Correctly indents actions

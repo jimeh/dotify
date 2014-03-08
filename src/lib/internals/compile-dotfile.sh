@@ -20,11 +20,21 @@ compile-dotfile() {
       output="${output}$(trim "${BASH_REMATCH[3]}") "
       output="${output}$(trim "${BASH_REMATCH[4]}")\n"
 
+    # Parse "<action>: -> <target>" lines.
+    elif [[ "$line" =~ ^(\ +)?([a-zA-Z0-9_-]+):\ *-[\>]\ +(.+)$ ]]; then
+      output="${output}${BASH_REMATCH[1]}dotify-action ${BASH_REMATCH[2]} "
+      output="${output}$(trim "${BASH_REMATCH[3]}")\n"
+
     # Parse "<source> -> <target>" lines.
     elif [[ "$line" =~ ^(\ +)?(.+)\ -[\>]\ (.+)$ ]]; then
       output="${output}${BASH_REMATCH[1]}dotify-action default "
       output="${output}$(trim "${BASH_REMATCH[2]}") "
       output="${output}$(trim "${BASH_REMATCH[3]}")\n"
+
+    # Parse "-> <target>" lines.
+    elif [[ "$line" =~ ^(\ +)?-[\>]\ (.+)$ ]]; then
+      output="${output}${BASH_REMATCH[1]}dotify-action default "
+      output="${output}$(trim "${BASH_REMATCH[2]}")\n"
 
     # Append line without modifications.
     else

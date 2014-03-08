@@ -24,9 +24,13 @@ gitignore -> .gitignore
 hgrc      -> .hgrc
 irbrc     -> .irbrc
 powconfig -> .powconfig
-rspec     -> .rspec
-tmux      -> .tmux
-tmux.conf -> .tmux.conf
+
+# The following examples uses the link action, without specifying a <source>,
+# in this case the link action is smart enough to determine the source value
+# for ".rspec" for example to be "rspec".
+link: -> .rspec
+-> .tmux
+-> .tmux.conf
 
 # The same source can be symlinked to multiple targets.
 load_shellrc.sh -> .profile
