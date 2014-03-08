@@ -6,7 +6,8 @@ source "../../src/lib/dotify-action.sh"
 # dotify-action() tests
 #
 
-# Set required option ENV
+# Set required environment variables.
+DOTIFY_RUN_MODE="install"
 DOTIFY_OPT_DEFAULT_ACTION="link"
 
 # Simple mock for link action.
@@ -16,10 +17,17 @@ dotify-action-link() {
 
 
 # Given a specific action.
-assert "dotify-action link ackrc .ackrc" "link stub: ackrc .ackrc"
+assert "dotify-action link ackrc .ackrc" "link stub: install .ackrc ackrc"
+
+# Given a specific action without a <source>.
+assert "dotify-action link .ackrc" "link stub: install .ackrc"
 
 # Given "default" action, it uses configured default action.
-assert "dotify-action default ackrc .ackrc" "link stub: ackrc .ackrc"
+assert "dotify-action default ackrc .ackrc" "link stub: install .ackrc ackrc"
+
+# Given "default" action without a <source>, it uses configured default
+# action.
+assert "dotify-action default .ackrc" "link stub: install .ackrc"
 
 # Given a invalid action.
 assert_raises "dotify-action foo ackrc .ackrc" 1
