@@ -45,7 +45,7 @@ source "../lib/internals/locate-dotfile.sh"
 source "../lib/internals/locate-target.sh"
 
 #
-# Command functions
+# Main functions
 #
 
 source "../lib/dotify-action.sh"
@@ -54,15 +54,16 @@ source "../lib/dotify-compile.sh"
 source "../lib/dotify-help.sh"
 source "../lib/dotify-info.sh"
 source "../lib/dotify-install.sh"
+source "../lib/dotify-register-action.sh"
 source "../lib/dotify-uninstall.sh"
 source "../lib/dotify-version.sh"
 
 #
-# Built-in Plugins
+# Built-in action plugins
 #
 
-source "../plugins/link.sh"
-source "../plugins/git.sh"
+source "../actions/link.sh"
+source "../actions/git.sh"
 
 #
 # Dotfile commands
