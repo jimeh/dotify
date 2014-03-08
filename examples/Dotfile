@@ -3,7 +3,7 @@
 # name of the root symlink can be customized.
 root_link .dotfiles
 
-# Each line defines an action, if not action name is given, the default is
+# Each line defines an action, if no action name is given, the default is
 # assumed.
 default_action link
 
@@ -39,13 +39,13 @@ load_shellrc.sh -> .zshrc
 # Bash-style if conditions and similar things as usable, as a Dotfile is
 # compiled into a normal Bash script before it is executed.
 if [ "$(hostname)" == "air.local" ]; then
-  # Wild-cards can be used in source, but target has to then be a directory
-  # instead of a file name.
+  # With the link action, wild-cards can be used in source, but target has to
+  # then be a directory instead of a file name.
   "launch_agents/*.plist" -> Library/LaunchAgents/
 
   # The git action clones git repositories to a path relative from your home
   # folder. If you want external git repos to be cloned into your dotfiles,
-  # use git submodules instead.
+  # I'd recommend using git submodules instead.
   git: https://github.com/sstephenson/rbenv.git -> .rbenv
 
   # Wrap long lines by ending a line with a backslash.
