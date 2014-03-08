@@ -6,7 +6,7 @@ shopt -s extglob
 # dotify 0.0.1
 # https://github.com/jimeh/dotify
 #
-# Copyright (c) 2013 Jim Myhrberg.
+# Copyright (c) 2014 Jim Myhrberg.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to
@@ -139,11 +139,21 @@ compile-dotfile() {
       output="${output}$(trim "${BASH_REMATCH[3]}") "
       output="${output}$(trim "${BASH_REMATCH[4]}")\n"
 
+    # Parse "<action>: -> <target>" lines.
+    elif [[ "$line" =~ ^(\ +)?([a-zA-Z0-9_-]+):\ *-[\>]\ +(.+)$ ]]; then
+      output="${output}${BASH_REMATCH[1]}dotify-action ${BASH_REMATCH[2]} "
+      output="${output}$(trim "${BASH_REMATCH[3]}")\n"
+
     # Parse "<source> -> <target>" lines.
     elif [[ "$line" =~ ^(\ +)?(.+)\ -[\>]\ (.+)$ ]]; then
       output="${output}${BASH_REMATCH[1]}dotify-action default "
       output="${output}$(trim "${BASH_REMATCH[2]}") "
       output="${output}$(trim "${BASH_REMATCH[3]}")\n"
+
+    # Parse "-> <target>" lines.
+    elif [[ "$line" =~ ^(\ +)?-[\>]\ (.+)$ ]]; then
+      output="${output}${BASH_REMATCH[1]}dotify-action default "
+      output="${output}$(trim "${BASH_REMATCH[2]}")\n"
 
     # Append line without modifications.
     else
@@ -217,25 +227,34 @@ locate-target() {
 
 
 #
-# Command functions
+# Main functions
 #
 
 dotify-action() {
   local action="$1"
-  local source="$2"
-  local target="$3"
+
+  if [ $# -lt 3 ]; then
+    local target="$2"
+  else
+    local source="$2"
+    local target="$3"
+  fi
 
   if [ "$action" == "default" ]; then
     action="$DOTIFY_OPT_DEFAULT_ACTION"
   fi
 
-  ! valid_action="$(command -v "dotify-action-${action}")"
+  ! local valid_action="$(command -v "dotify-action-${action}")"
   if [ -z "$valid_action" ]; then
     echo "ERROR: \"$action\" is not a valid action." >&2
     return 1
   fi
 
-  dotify-action-${action} "$source" "$target"
+  if [ -n "$source" ]; then
+    dotify-action-${action} "$DOTIFY_RUN_MODE" "$target" "$source"
+  else
+    dotify-action-${action} "$DOTIFY_RUN_MODE" "$target"
+  fi
 }
 
 dotify-clean() {
@@ -276,6 +295,11 @@ dotify-install() {
   return $?
 }
 
+dotify-register-action() {
+  if [ -z "$DOTIFY_ACTIONS" ]; then DOTIFY_ACTIONS=(); fi
+  DOTIFY_ACTIONS+=("$1")
+}
+
 dotify-uninstall() {
   DOTIFY_RUN_MODE="uninstall"
   execute-dotfile
@@ -292,39 +316,73 @@ dotify-print-version() {
 
 
 #
-# Built-in Plugins
+# Built-in action plugins
 #
 
+# Register link action.
+dotify-register-action "link"
+
+# Link action.
 dotify-action-link() {
-  if [ "$DOTIFY_RUN_MODE" == "install" ]; then
-    dotify-action-link-install $@
-  elif [ "$DOTIFY_RUN_MODE" == "uninstall" ]; then
-    dotify-action-link-uninstall $@
+  local mode="$1"
+  ! local valid_mode="$(command -v "dotify-action-link-do-${mode}")"
+
+  if [ -n "$valid_mode" ]; then
+    shift 1
+    dotify-action-link-do-${mode} $@
   fi
 }
 
-dotify-action-link-install() {
+dotify-action-link-do-install() {
   echo "link install: $@"
 }
 
-dotify-action-link-uninstall() {
+dotify-action-link-do-uninstall() {
   echo "link uninstall: $@"
 }
 
-dotify-action-git() {
-  if [ "$DOTIFY_RUN_MODE" == "install" ]; then
-    dotify-action-git-install $@
-  elif [ "$DOTIFY_RUN_MODE" == "uninstall" ]; then
-    dotify-action-git-uninstall $@
+dotify-action-link-do-cleanup() {
+  echo "link cleanup: $@"
+}
+
+dotify-action-link-post-run() {
+  if [ "$1" == "cleanup" ]; then
+    shift 1
+    dotify-action-link-do-cleanup $@
   fi
 }
 
-dotify-action-git-install() {
+# Register git action
+dotify-register-action "git"
+
+# Git action.
+dotify-action-git() {
+  local mode="$1"
+  ! local valid_mode="$(command -v "dotify-action-git-do-${mode}")"
+
+  if [ -n "$valid_mode" ]; then
+    shift 1
+    dotify-action-git-do-${mode} $@
+  fi
+}
+
+dotify-action-git-do-install() {
   echo "git install: $@"
 }
 
-dotify-action-git-uninstall() {
+dotify-action-git-do-uninstall() {
   echo "git uninstall: $@"
+}
+
+dotify-action-git-do-cleanup() {
+  echo "git cleanup: $@"
+}
+
+dotify-action-git-post-run() {
+  if [ "$1" == "cleanup" ]; then
+    shift 1
+    dotify-action-link-do-cleanup $@
+  fi
 }
 
 
