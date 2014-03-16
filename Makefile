@@ -1,8 +1,24 @@
+test: build prepare
+	./test.sh
+
 build:
 	./build.sh
 
-test: build
-	./test.sh
+prepare: prepare-assert.sh prepare-stub.sh
+
+prepare-assert.sh:
+	test -f "test/assert.sh" || ( \
+		echo "fetching assert.sh..." && \
+		curl -s -L -o test/assert.sh \
+			https://raw.github.com/lehmannro/assert.sh/master/assert.sh \
+	)
+
+prepare-stub.sh:
+	test -f "test/stub.sh" || ( \
+		echo "fetching stub.sh..." && \
+		curl -s -L -o test/stub.sh \
+			https://raw.github.com/jimeh/stub.sh/master/stub.sh \
+	)
 
 .SILENT:
-.PHONY: build test
+.PHONY: build test prepare preare-assert.sh prepare-stub.sh
