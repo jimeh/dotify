@@ -38,25 +38,38 @@ source "../lib/helpers/trim.sh"
 # Internal functions
 #
 
+source "../lib/internals/action.sh"
 source "../lib/internals/compile-dotfile.sh"
 source "../lib/internals/create-symlink.sh"
 source "../lib/internals/execute-dotfile.sh"
-source "../lib/internals/locate-dotfile.sh"
-source "../lib/internals/locate-target.sh"
+source "../lib/internals/has-action.sh"
+source "../lib/internals/register-action.sh"
+source "../lib/internals/setup-root-link.sh"
 
 #
-# Main functions
+# Dotify attributes
 #
 
-source "../lib/dotify-action.sh"
-source "../lib/dotify-clean.sh"
-source "../lib/dotify-compile.sh"
-source "../lib/dotify-help.sh"
-source "../lib/dotify-info.sh"
-source "../lib/dotify-install.sh"
-source "../lib/dotify-register-action.sh"
-source "../lib/dotify-uninstall.sh"
-source "../lib/dotify-version.sh"
+source "../lib/attributes/default-action.sh"
+source "../lib/attributes/dotfile-path.sh"
+source "../lib/attributes/dry-run.sh"
+source "../lib/attributes/root-link.sh"
+source "../lib/attributes/run-mode.sh"
+source "../lib/attributes/source-path.sh"
+source "../lib/attributes/target-path.sh"
+
+#
+# Dotify commands
+#
+
+source "../lib/commands/clean.sh"
+source "../lib/commands/compile.sh"
+source "../lib/commands/help.sh"
+source "../lib/commands/info.sh"
+source "../lib/commands/install.sh"
+source "../lib/commands/print-version.sh"
+source "../lib/commands/uninstall.sh"
+source "../lib/commands/version.sh"
 
 #
 # Built-in action plugins
@@ -74,40 +87,33 @@ source "../lib/dotfile-commands/default_action.sh"
 source "../lib/dotfile-commands/include.sh"
 
 #
-# Default Options
-#
-
-DOTIFY_OPT_ROOT_LINK=".dotfiles"
-DOTIFY_OPT_DEFAULT_ACTION="link"
-
-#
 # Argument Parsing
 #
 
-DOTFILE="" # --dotfile / -f
-TARGET=""  # --target  / -t
-DRY_RUN="" # --dry-run / -d
-HELP=""    # --help    / -h
-VERSION="" # --version / -v
+ARG_DOTFILE="" # --dotfile / -f
+ARG_TARGET=""  # --target  / -t
+ARG_DRY_RUN="" # --dry-run / -d
+ARG_HELP=""    # --help    / -h
+ARG_VERSION="" # --version / -v
 
 if has-argument dotfile f "$@"; then
-  DOTFILE="$(parse-argument dotfile f "$@")"
+  ARG_DOTFILE="$(parse-argument dotfile f "$@")"
 fi
 
 if has-argument target t "$@"; then
-  TARGET="$(parse-argument target t "$@")"
+  ARG_TARGET="$(parse-argument target t "$@")"
 fi
 
 if has-argument dry-run d "$@"; then
-  DRY_RUN="1"
+  ARG_DRY_RUN="1"
 fi
 
 if has-argument help h "$@"; then
-  HELP="1"
+  ARG_HELP="1"
 fi
 
 if has-argument version v "$@"; then
-  VERSION="1"
+  ARG_VERSION="1"
 fi
 
 
@@ -128,33 +134,33 @@ for arg in "$@"; do
 done
 
 # Show help and exit if help arguments or command are given.
-if [ -n "$HELP" ] || [ "$command" == "help" ]; then
-  dotify-help
+if [ -n "$ARG_HELP" ] || [ "$command" == "help" ]; then
+  dotify-command-help
   exit
 fi
 
 # Show version info and exit if version arguments or command are given.
-if [ -n "$VERSION" ] || [ "$command" == "version" ]; then
-  dotify-help | head -1
+if [ -n "$ARG_VERSION" ] || [ "$command" == "version" ]; then
+  dotify-command-help | head -1
   exit
 fi
 
 # Deal with the commands.
 case "$command" in
   "info" )
-    dotify-info
+    dotify-command-info
     ;;
   "compile" )
-    dotify-compile
+    dotify-command-compile
     ;;
   "" | "install" )
-    dotify-install
+    dotify-command-install
     ;;
-  "uninstall" | "remove" )
-    dotify-uninstall
+  "uninstall" )
+    dotify-command-uninstall
     ;;
   "clean" )
-    dotify-clean
+    dotify-command-clean
     ;;
 esac
 

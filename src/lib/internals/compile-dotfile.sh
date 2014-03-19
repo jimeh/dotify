@@ -1,6 +1,6 @@
-compile-dotfile() {
+dotify-compile-dotfile() {
   local dotfile="$1"
-  if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
+  if [ -z "$dotfile" ]; then dotfile="$(dotify-get-dotfile-path)"; fi
 
   if [ ! -f "$dotfile" ]; then
     echo "ERROR: \"$dotfile\" does not exist." >&2

@@ -117,9 +117,38 @@ trim() {
 # Internal functions
 #
 
-compile-dotfile() {
+dotify-action() {
+  local action="$1"
+
+  if [ $# -lt 3 ]; then
+    local target="$2"
+  else
+    local source="$2"
+    local target="$3"
+  fi
+
+  dotify-setup-root-link
+
+  if [ "$action" == "default" ]; then
+    action="$(dotify-get-default-action)"
+  fi
+
+  ! local valid_action="$(command -v "dotify-action-${action}")"
+  if [ -z "$valid_action" ]; then
+    echo "ERROR: \"$action\" is not a valid action." >&2
+    return 1
+  fi
+
+  if [ -n "$source" ]; then
+    dotify-action-${action} "$(dotify-get-run-mode)" "$target" "$source"
+  else
+    dotify-action-${action} "$(dotify-get-run-mode)" "$target"
+  fi
+}
+
+dotify-compile-dotfile() {
   local dotfile="$1"
-  if [ -z "$dotfile" ]; then dotfile="$DOTFILE"; fi
+  if [ -z "$dotfile" ]; then dotfile="$(dotify-get-dotfile-path)"; fi
 
   if [ ! -f "$dotfile" ]; then
     echo "ERROR: \"$dotfile\" does not exist." >&2
@@ -164,15 +193,19 @@ compile-dotfile() {
   echo -e "$output"
 }
 
-create-symlink() {
+dotify-create-symlink() {
   local source="$1"
   local target="$2"
 
   if [ ! -e "$target" ] && [ ! -h "$target" ]; then
     ln -s "$source" "$target"
+    echo "created"
     return 0
   elif [ -h "$target" ]; then
-    if [ "$(readlink "$target")" != "$source" ]; then
+    if [ "$(readlink "$target")" == "$source" ]; then
+      echo "exists"
+      return 0
+    else
       echo "ERROR: \"$target\" exists, is a symlink to:" \
         "$(readlink "$target")" >&2
       return 1
@@ -183,135 +216,211 @@ create-symlink() {
   fi
 }
 
-execute-dotfile() {
-  local dotfile_source="$(dotify-compile)"
+dotify-execute-dotfile() {
+  local dotfile_source="$(dotify-command-compile)"
 
-  locate-target
+  dotify-valid-target-path
   if [ "$?" != "0" ]; then return 1; fi
-
-  ROOT_DIR="$(dirname "$DOTFILE")"
 
   eval "$dotfile_source"
   return $?
 }
 
-locate-dotfile() {
-  if [ -n "$DOTFILE" ]; then
-    if [ ! -f "$DOTFILE" ]; then
-      echo "ERROR: \"$DOTFILE\" does not exist." >&2
+dotify-has-action() {
+  if [[ " ${DOTIFY_ACTIONS[@]} " != *" $1 "* ]]; then
+    return 1
+  fi
+}
+
+dotify-register-action() {
+  if [ -z "$DOTIFY_ACTIONS" ]; then
+    DOTIFY_ACTIONS=()
+  fi
+
+  if [[ " ${DOTIFY_ACTIONS[@]} " == *" $1 "* ]]; then
+    return 1
+  fi
+
+  DOTIFY_ACTIONS+=("$1")
+}
+
+dotify-setup-root-link() {
+  return 0
+}
+
+
+#
+# Dotify attributes
+#
+
+dotify-set-default-action() {
+  DOTIFY_ATTR_DEFAULT_ACTION="$1"
+}
+
+dotify-get-default-action() {
+  if [ -z "$DOTIFY_ATTR_DEFAULT_ACTION" ]; then
+    DOTIFY_ATTR_DEFAULT_ACTION="link" # Default value.
+  fi
+
+  echo "$DOTIFY_ATTR_DEFAULT_ACTION"
+}
+
+dotify-get-dotfile-path() {
+  if [ -n "$DOTIFY_ATTR_DOTFILE_PATH" ]; then
+    echo "$DOTIFY_ATTR_DOTFILE_PATH"
+    return 0
+  fi
+
+  if [ -n "$ARG_DOTFILE" ]; then
+    if [ -f "$ARG_DOTFILE" ]; then
+      DOTIFY_ATTR_DOTFILE_PATH="$ARG_DOTFILE"
+    else
+      echo "ERROR: \"$ARG_DOTFILE\" does not exist." >&2
       return 1
     fi
   elif [ -f "$(pwd)/Dotfile" ]; then
-    DOTFILE="$(pwd)/Dotfile"
+    DOTIFY_ATTR_DOTFILE_PATH="$(pwd)/Dotfile"
   else
     echo "ERROR: \"$(pwd)\" does not have a Dotfile." >&2
     return 1
   fi
+
+  echo "$DOTIFY_ATTR_DOTFILE_PATH"
 }
 
-locate-target() {
-  if [ -n "$TARGET" ]; then
-    if [ ! -d "$TARGET" ]; then
-      echo "ERROR: Target \"$TARGET\" is not a directory." >&2
+dotify-valid-dotfile-path() {
+  dotify-get-dotfile-path >/dev/null 2>&1
+  return "$?"
+}
+
+dotify-get-dry-run() {
+  if [ -n "$DOTIFY_ATTR_DRY_RUN" ]; then
+    DOTIFY_ATTR_DRY_RUN="$ARG_DRY_RUN"
+  fi
+
+  echo "$DOTIFY_ATTR_DRY_RUN"
+}
+
+dotify-set-root-link() {
+  DOTIFY_ATTR_ROOT_LINK="$1"
+}
+
+dotify-get-root-link() {
+  if [ -z "$DOTIFY_ATTR_ROOT_LINK" ]; then
+    DOTIFY_ATTR_ROOT_LINK=".dotfiles" # Default value.
+  fi
+
+  echo "$DOTIFY_ATTR_ROOT_LINK"
+}
+
+dotify-set-run-mode() {
+  DOTIFY_ATTR_RUN_MODE="$1"
+}
+
+dotify-get-run-mode() {
+  echo "$DOTIFY_ATTR_RUN_MODE"
+}
+
+dotify-get-source-path() {
+  local dotfile="$(dotify-get-dotfile-path)"
+  if [ "$?" != "0" ]; then return 1; fi
+
+  echo "$(dirname "$dotfile")"
+}
+
+dotify-valid-source-path() {
+  dotify-get-source-path >/dev/null 2>&1
+  return "$?"
+}
+
+dotify-get-target-path() {
+  if [ -n "$DOTIFY_ATTR_TARGET" ]; then
+    echo "$DOTIFY_ATTR_TARGET"
+    return 0
+  fi
+
+  if [ -n "$ARG_TARGET" ]; then
+    if [ -d "$ARG_TARGET" ]; then
+      DOTIFY_ATTR_TARGET="$ARG_TARGET"
+    else
+      echo "ERROR: Target \"$ARG_TARGET\" is not a directory." >&2
       return 1
     fi
   elif [ -n "$HOME" ] && [ -d "$HOME" ]; then
-    TARGET="$HOME"
+    DOTIFY_ATTR_TARGET="$HOME"
   elif [ -d ~ ]; then
-    TARGET=~
+    DOTIFY_ATTR_TARGET=~
   else
     echo "ERROR: Your \$HOME folder could not be found." >&2
     return 1
   fi
+
+  echo "$DOTIFY_ATTR_TARGET"
+}
+
+dotify-valid-target-path() {
+  dotify-get-target-path >/dev/null 2>&1
+  return "$?"
 }
 
 
 #
-# Main functions
+# Dotify commands
 #
 
-dotify-action() {
-  local action="$1"
-
-  if [ $# -lt 3 ]; then
-    local target="$2"
-  else
-    local source="$2"
-    local target="$3"
-  fi
-
-  if [ "$action" == "default" ]; then
-    action="$DOTIFY_OPT_DEFAULT_ACTION"
-  fi
-
-  ! local valid_action="$(command -v "dotify-action-${action}")"
-  if [ -z "$valid_action" ]; then
-    echo "ERROR: \"$action\" is not a valid action." >&2
-    return 1
-  fi
-
-  if [ -n "$source" ]; then
-    dotify-action-${action} "$DOTIFY_RUN_MODE" "$target" "$source"
-  else
-    dotify-action-${action} "$DOTIFY_RUN_MODE" "$target"
-  fi
-}
-
-dotify-clean() {
-  DOTIFY_RUN_MODE="clean"
-  execute-dotfile
+dotify-command-clean() {
+  dotify-set-run-mode "clean"
+  dotify-execute-dotfile
   return $?
 }
 
-dotify-compile() {
-  locate-dotfile
+dotify-command-compile() {
+  dotify-valid-dotfile-path
   if [ "$?" != "0" ]; then return 1; fi
 
-  compile-dotfile "$DOTFILE"
+  dotify-compile-dotfile "$DOTFILE"
   return $?
 }
 
-dotify-help() {
-  echo "$(dotify-print-version)"
+dotify-command-help() {
+  echo "$(dotify-command-print-version)"
   echo "usage: dotify <command> [<args>]"
 }
 
-dotify-info() {
-  locate-dotfile
+dotify-command-info() {
+  dotify-valid-dotfile-path
   if [ "$?" != "0" ]; then return 1; fi
 
-  locate-target
+  dotify-valid-source-path
+  if [ "$?" != "0" ]; then return 1; fi
+
+  dotify-valid-target-path
   if [ "$?" != "0" ]; then return 1; fi
 
   echo "$(dotify-print-version)"
-  echo "  Dotfile: $DOTFILE"
-  echo "     Root: $(dirname "$DOTFILE")"
-  echo "   Target: $TARGET"
+  echo "  Dotfile: $(dotify-get-dotfile-path)"
+  echo "   Source: $(dotify-get-source-path)"
+  echo "   Target: $(dotify-get-target-path)"
 }
 
-dotify-install() {
-  DOTIFY_RUN_MODE="install"
-  execute-dotfile
+dotify-command-install() {
+  dotify-set-run-mode "install"
+  dotify-execute-dotfile
   return $?
 }
 
-dotify-register-action() {
-  if [ -z "$DOTIFY_ACTIONS" ]; then DOTIFY_ACTIONS=(); fi
-  DOTIFY_ACTIONS+=("$1")
+dotify-command-print-version() {
+  echo "dotify $(dotify-command-version)"
 }
 
-dotify-uninstall() {
-  DOTIFY_RUN_MODE="uninstall"
-  execute-dotfile
+dotify-command-uninstall() {
+  dotify-set-run-mode "uninstall"
+  dotify-execute-dotfile
   return $?
 }
 
-dotify-version() {
+dotify-command-version() {
   echo "0.0.1"
-}
-
-dotify-print-version() {
-  echo "dotify $(dotify-version)"
 }
 
 
@@ -325,30 +434,30 @@ dotify-register-action "link"
 # Link action.
 dotify-action-link() {
   local mode="$1"
-  ! local valid_mode="$(command -v "dotify-action-link-do-${mode}")"
+  ! local valid_mode="$(command -v "dotify-action-link-${mode}")"
 
   if [ -n "$valid_mode" ]; then
     shift 1
-    dotify-action-link-do-${mode} $@
+    dotify-action-link-${mode} $@
   fi
 }
 
-dotify-action-link-do-install() {
+dotify-action-link-install() {
   echo "link install: $@"
 }
 
-dotify-action-link-do-uninstall() {
+dotify-action-link-uninstall() {
   echo "link uninstall: $@"
 }
 
-dotify-action-link-do-cleanup() {
+dotify-action-link-cleanup() {
   echo "link cleanup: $@"
 }
 
 dotify-action-link-post-run() {
   if [ "$1" == "cleanup" ]; then
     shift 1
-    dotify-action-link-do-cleanup $@
+    dotify-action-link-cleanup $@
   fi
 }
 
@@ -358,30 +467,30 @@ dotify-register-action "git"
 # Git action.
 dotify-action-git() {
   local mode="$1"
-  ! local valid_mode="$(command -v "dotify-action-git-do-${mode}")"
+  ! local valid_mode="$(command -v "dotify-action-git-${mode}")"
 
   if [ -n "$valid_mode" ]; then
     shift 1
-    dotify-action-git-do-${mode} $@
+    dotify-action-git-${mode} $@
   fi
 }
 
-dotify-action-git-do-install() {
+dotify-action-git-install() {
   echo "git install: $@"
 }
 
-dotify-action-git-do-uninstall() {
+dotify-action-git-uninstall() {
   echo "git uninstall: $@"
 }
 
-dotify-action-git-do-cleanup() {
+dotify-action-git-cleanup() {
   echo "git cleanup: $@"
 }
 
 dotify-action-git-post-run() {
   if [ "$1" == "cleanup" ]; then
     shift 1
-    dotify-action-link-do-cleanup $@
+    dotify-action-git-cleanup $@
   fi
 }
 
@@ -391,11 +500,11 @@ dotify-action-git-post-run() {
 #
 
 root_link () {
-  DOTIFY_OPT_ROOT_LINK="$@"
+  dotify-set-root-link "$@"
 }
 
 default_action() {
-  DOTIFY_OPT_DEFAULT_ACTION="$@"
+  dotify-set-default-action "$@"
 }
 
 include() {
@@ -404,40 +513,33 @@ include() {
 
 
 #
-# Default Options
-#
-
-DOTIFY_OPT_ROOT_LINK=".dotfiles"
-DOTIFY_OPT_DEFAULT_ACTION="link"
-
-#
 # Argument Parsing
 #
 
-DOTFILE="" # --dotfile / -f
-TARGET=""  # --target  / -t
-DRY_RUN="" # --dry-run / -d
-HELP=""    # --help    / -h
-VERSION="" # --version / -v
+ARG_DOTFILE="" # --dotfile / -f
+ARG_TARGET=""  # --target  / -t
+ARG_DRY_RUN="" # --dry-run / -d
+ARG_HELP=""    # --help    / -h
+ARG_VERSION="" # --version / -v
 
 if has-argument dotfile f "$@"; then
-  DOTFILE="$(parse-argument dotfile f "$@")"
+  ARG_DOTFILE="$(parse-argument dotfile f "$@")"
 fi
 
 if has-argument target t "$@"; then
-  TARGET="$(parse-argument target t "$@")"
+  ARG_TARGET="$(parse-argument target t "$@")"
 fi
 
 if has-argument dry-run d "$@"; then
-  DRY_RUN="1"
+  ARG_DRY_RUN="1"
 fi
 
 if has-argument help h "$@"; then
-  HELP="1"
+  ARG_HELP="1"
 fi
 
 if has-argument version v "$@"; then
-  VERSION="1"
+  ARG_VERSION="1"
 fi
 
 
@@ -458,33 +560,33 @@ for arg in "$@"; do
 done
 
 # Show help and exit if help arguments or command are given.
-if [ -n "$HELP" ] || [ "$command" == "help" ]; then
-  dotify-help
+if [ -n "$ARG_HELP" ] || [ "$command" == "help" ]; then
+  dotify-command-help
   exit
 fi
 
 # Show version info and exit if version arguments or command are given.
-if [ -n "$VERSION" ] || [ "$command" == "version" ]; then
-  dotify-help | head -1
+if [ -n "$ARG_VERSION" ] || [ "$command" == "version" ]; then
+  dotify-command-help | head -1
   exit
 fi
 
 # Deal with the commands.
 case "$command" in
   "info" )
-    dotify-info
+    dotify-command-info
     ;;
   "compile" )
-    dotify-compile
+    dotify-command-compile
     ;;
   "" | "install" )
-    dotify-install
+    dotify-command-install
     ;;
-  "uninstall" | "remove" )
-    dotify-uninstall
+  "uninstall" )
+    dotify-command-uninstall
     ;;
   "clean" )
-    dotify-clean
+    dotify-command-clean
     ;;
 esac
 

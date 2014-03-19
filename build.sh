@@ -1,5 +1,5 @@
 #! /usr/bin/env bash
-source "src/lib/dotify-version.sh"
+source "src/lib/commands/version.sh"
 source "src/lib/helpers/trim.sh"
 
 resolve_link() {
@@ -46,7 +46,7 @@ output=""
 while IFS= read line; do
   if [[ "$line" == "#"* ]]; then
     # Replace {{DOTIFY_VERSION}} placeholder in comments.
-    line="${line/\{\{DOTIFY_VERSION\}\}/$(dotify-version)}"
+    line="${line/\{\{DOTIFY_VERSION\}\}/$(dotify-command-version)}"
     line="${line/\{\{COPYRIGHT_YEAR\}\}/$(date +"%Y")}"
   fi
 

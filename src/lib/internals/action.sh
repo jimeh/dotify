@@ -8,8 +8,10 @@ dotify-action() {
     local target="$3"
   fi
 
+  dotify-setup-root-link
+
   if [ "$action" == "default" ]; then
-    action="$DOTIFY_OPT_DEFAULT_ACTION"
+    action="$(dotify-get-default-action)"
   fi
 
   ! local valid_action="$(command -v "dotify-action-${action}")"
@@ -19,8 +21,8 @@ dotify-action() {
   fi
 
   if [ -n "$source" ]; then
-    dotify-action-${action} "$DOTIFY_RUN_MODE" "$target" "$source"
+    dotify-action-${action} "$(dotify-get-run-mode)" "$target" "$source"
   else
-    dotify-action-${action} "$DOTIFY_RUN_MODE" "$target"
+    dotify-action-${action} "$(dotify-get-run-mode)" "$target"
   fi
 }

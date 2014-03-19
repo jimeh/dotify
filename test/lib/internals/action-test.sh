@@ -1,20 +1,15 @@
 #! /usr/bin/env bash
-source "../test-helper.sh"
-source "../../src/lib/dotify-action.sh"
+source "../../test-helper.sh"
+source "../../../src/lib/internals/action.sh"
 
 #
 # dotify-action() tests
 #
 
-# Set required environment variables.
-DOTIFY_RUN_MODE="install"
-DOTIFY_OPT_DEFAULT_ACTION="link"
-
-# Simple mock for link action.
-dotify-action-link() {
-  echo "link stub: $@"
-}
-
+stub "dotify-setup-root-link"
+stub_and_echo "dotify-get-run-mode" "install"
+stub_and_echo "dotify-get-default-action" "link"
+stub_and_echo "dotify-action-link" "link stub: \$@"
 
 # Given a specific action.
 assert "dotify-action link ackrc .ackrc" "link stub: install .ackrc ackrc"
@@ -34,4 +29,8 @@ assert_raises "dotify-action foo ackrc .ackrc" 1
 assert "dotify-action foo ackrc .ackrc" ""
 assert "dotify-action foo ackrc .ackrc 2>&1" "ERROR: \"foo\" is not a valid action."
 
+
+restore "dotify-setup-root-link"
+restore "dotify-get-run-mode"
+restore "dotify-action-link"
 assert_end "dotify-action()"

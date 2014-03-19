@@ -4,7 +4,7 @@ source "../../../src/lib/helpers/trim.sh"
 source "../../../src/lib/internals/compile-dotfile.sh"
 
 #
-# compile-dotfile() tests
+# dotify-compile-dotfile() tests
 #
 
 # Create temp files/folders used for locate-dotfile() tests.
@@ -14,27 +14,28 @@ echo "hostname='air'" > $dotfile
 
 
 # Compiles file given as first argument.
-assert "compile-dotfile $dotfile" "hostname='air'"
-assert_raises "compile-dotfile tmp/fake" 1
-assert "compile-dotfile tmp/fake" ""
-assert "compile-dotfile tmp/fake 2>&1" "ERROR: \"tmp/fake\" does not exist."
+assert "dotify-compile-dotfile $dotfile" "hostname='air'"
+assert_raises "dotify-compile-dotfile tmp/fake" 1
+assert "dotify-compile-dotfile tmp/fake" ""
+assert "dotify-compile-dotfile tmp/fake 2>&1" \
+  "ERROR: \"tmp/fake\" does not exist."
 
 
-# Compiles file from global $DOTFILE variable.
-DOTFILE=$dotfile
-assert "compile-dotfile" "hostname='air'"
-DOTFILE="tmp/fake"
-assert_raises "compile-dotfile" 1
-assert "compile-dotfile" ""
-assert "compile-dotfile 2>&1" "ERROR: \"tmp/fake\" does not exist."
-unset DOTFILE
+# Compiles file from dotify-get-dotfile-path attribute helper.
+stub_and_echo "dotify-get-dotfile-path" "$dotfile"
+assert "dotify-compile-dotfile" "hostname='air'"
+stub_and_echo "dotify-get-dotfile-path" "tmp/fake"
+assert_raises "dotify-compile-dotfile" 1
+assert "dotify-compile-dotfile" ""
+assert "dotify-compile-dotfile 2>&1" "ERROR: \"tmp/fake\" does not exist."
+restore "dotify-get-dotfile-path"
 
 
 # Compiles standard actions
 echo -e "root_link .dotfiles
 link: ackrc     -> .ackrc
 link: gitconfig -> \".gitconfig\"" > $dotfile
-assert "compile-dotfile $dotfile" "root_link .dotfiles
+assert "dotify-compile-dotfile $dotfile" "root_link .dotfiles
 dotify-action link ackrc .ackrc
 dotify-action link gitconfig \".gitconfig\""
 
@@ -43,7 +44,7 @@ dotify-action link gitconfig \".gitconfig\""
 echo -e "root_link .dotfiles
 link: -> .ackrc
 link:-> \".gitconfig\"" > $dotfile
-assert "compile-dotfile $dotfile" "root_link .dotfiles
+assert "dotify-compile-dotfile $dotfile" "root_link .dotfiles
 dotify-action link .ackrc
 dotify-action link \".gitconfig\""
 
@@ -52,7 +53,7 @@ dotify-action link \".gitconfig\""
 echo -e "root_link .dotfiles
 link: ackrc -> .ackrc
 gitconfig   -> \".gitconfig\"" > $dotfile
-assert "compile-dotfile $dotfile" "root_link .dotfiles
+assert "dotify-compile-dotfile $dotfile" "root_link .dotfiles
 dotify-action link ackrc .ackrc
 dotify-action default gitconfig \".gitconfig\""
 
@@ -61,7 +62,7 @@ dotify-action default gitconfig \".gitconfig\""
 echo -e "root_link .dotfiles
 -> .ackrc
  -> \".gitconfig\"" > $dotfile
-assert "compile-dotfile $dotfile" "root_link .dotfiles
+assert "dotify-compile-dotfile $dotfile" "root_link .dotfiles
 dotify-action default .ackrc
  dotify-action default \".gitconfig\""
 
@@ -71,7 +72,7 @@ echo -e "root_link .dotfiles
 if [ true ]; then
   ackrc -> .ackrc
 fi" > $dotfile
-assert "compile-dotfile $dotfile" "root_link .dotfiles
+assert "dotify-compile-dotfile $dotfile" "root_link .dotfiles
 if [ true ]; then
   dotify-action default ackrc .ackrc
 fi"
@@ -87,7 +88,7 @@ profile -> .profile
 # Apps
 ackrc     -> .ackrc
 gitconfig -> .gitconfig" > $dotfile
-assert "compile-dotfile $dotfile" "root_link .dotfiles
+assert "dotify-compile-dotfile $dotfile" "root_link .dotfiles
 dotify-action default profile .profile
 dotify-action default ackrc .ackrc
 dotify-action default gitconfig .gitconfig"
@@ -98,4 +99,4 @@ rm "tmp/Dotfile"
 rmdir "tmp"
 assert_raises "test -d tmp" 1
 
-assert_end 'compile-dotfile()'
+assert_end 'dotify-compile-dotfile()'

@@ -1,10 +1,8 @@
-execute-dotfile() {
-  local dotfile_source="$(dotify-compile)"
+dotify-execute-dotfile() {
+  local dotfile_source="$(dotify-command-compile)"
 
-  locate-target
+  dotify-valid-target-path
   if [ "$?" != "0" ]; then return 1; fi
-
-  ROOT_DIR="$(dirname "$DOTFILE")"
 
   eval "$dotfile_source"
   return $?
