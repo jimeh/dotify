@@ -49,7 +49,7 @@ remove_test/stub.sh:
 update_test/stub.sh: remove_test/stub.sh test/stub.sh
 
 .SILENT:
-.PHONY: test bootstrap clean \
+.PHONY: build test bootstrap clean \
 	remove_test-runner.sh update_test-runner.sh \
 	remove_test/assert.sh update_test/assert.sh \
 	remove_test/stub.sh   update_test/stub.sh
