@@ -87,81 +87,14 @@ source "../lib/dotfile-commands/default_action.sh"
 source "../lib/dotfile-commands/include.sh"
 
 #
-# Argument Parsing
+# Main
 #
 
-ARG_DOTFILE="" # --dotfile / -f
-ARG_TARGET=""  # --target  / -t
-ARG_DRY_RUN="" # --dry-run / -d
-ARG_HELP=""    # --help    / -h
-ARG_VERSION="" # --version / -v
+source "../lib/main/parse-arguments.sh"
+source "../lib/main/parse-command.sh"
+source "../lib/main/dispatcher.sh"
+source "../lib/main/main.sh"
 
-if has-argument dotfile f "$@"; then
-  ARG_DOTFILE="$(parse-argument dotfile f "$@")"
-fi
-
-if has-argument target t "$@"; then
-  ARG_TARGET="$(parse-argument target t "$@")"
-fi
-
-if has-argument dry-run d "$@"; then
-  ARG_DRY_RUN="1"
-fi
-
-if has-argument help h "$@"; then
-  ARG_HELP="1"
-fi
-
-if has-argument version v "$@"; then
-  ARG_VERSION="1"
-fi
-
-
-#
-# Command Parsing
-#
-
-# Command is first argument that does not start with a dash or plus.
-for arg in "$@"; do
-  if [ -n "$skip_next" ]; then
-    skip_next=
-  elif [[ "$arg" =~ ^(--dotfile|-f|--taraget|-t)$ ]]; then
-    skip_next=1
-  elif [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
-    command="$arg"
-    break
-  fi
-done
-
-# Show help and exit if help arguments or command are given.
-if [ -n "$ARG_HELP" ] || [ "$command" == "help" ]; then
-  dotify-command-help
-  exit
-fi
-
-# Show version info and exit if version arguments or command are given.
-if [ -n "$ARG_VERSION" ] || [ "$command" == "version" ]; then
-  dotify-command-help | head -1
-  exit
-fi
-
-# Deal with the commands.
-case "$command" in
-  "info" )
-    dotify-command-info
-    ;;
-  "compile" )
-    dotify-command-compile
-    ;;
-  "" | "install" )
-    dotify-command-install
-    ;;
-  "uninstall" )
-    dotify-command-uninstall
-    ;;
-  "clean" )
-    dotify-command-clean
-    ;;
-esac
+dotify-main $@
 
 exit $?
