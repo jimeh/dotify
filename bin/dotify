@@ -254,7 +254,7 @@ dotify-setup-root-link() {
 #
 
 dotify-set-default-action() {
-  DOTIFY_ATTR_DEFAULT_ACTION="$1"
+  DOTIFY_ATTR_DEFAULT_ACTION="$@"
 }
 
 dotify-get-default-action() {
@@ -271,11 +271,11 @@ dotify-get-dotfile-path() {
     return 0
   fi
 
-  if [ -n "$ARG_DOTFILE" ]; then
-    if [ -f "$ARG_DOTFILE" ]; then
-      DOTIFY_ATTR_DOTFILE_PATH="$ARG_DOTFILE"
+  if [ -n "$DOTIFY_ARG_DOTFILE" ]; then
+    if [ -f "$DOTIFY_ARG_DOTFILE" ]; then
+      DOTIFY_ATTR_DOTFILE_PATH="$DOTIFY_ARG_DOTFILE"
     else
-      echo "ERROR: \"$ARG_DOTFILE\" does not exist." >&2
+      echo "ERROR: \"$DOTIFY_ARG_DOTFILE\" does not exist." >&2
       return 1
     fi
   elif [ -f "$(pwd)/Dotfile" ]; then
@@ -295,14 +295,14 @@ dotify-valid-dotfile-path() {
 
 dotify-get-dry-run() {
   if [ -n "$DOTIFY_ATTR_DRY_RUN" ]; then
-    DOTIFY_ATTR_DRY_RUN="$ARG_DRY_RUN"
+    DOTIFY_ATTR_DRY_RUN="$DOTIFY_ARG_DRY_RUN"
   fi
 
   echo "$DOTIFY_ATTR_DRY_RUN"
 }
 
 dotify-set-root-link() {
-  DOTIFY_ATTR_ROOT_LINK="$1"
+  DOTIFY_ATTR_ROOT_LINK="$@"
 }
 
 dotify-get-root-link() {
@@ -339,11 +339,11 @@ dotify-get-target-path() {
     return 0
   fi
 
-  if [ -n "$ARG_TARGET" ]; then
-    if [ -d "$ARG_TARGET" ]; then
-      DOTIFY_ATTR_TARGET="$ARG_TARGET"
+  if [ -n "$DOTIFY_ARG_TARGET" ]; then
+    if [ -d "$DOTIFY_ARG_TARGET" ]; then
+      DOTIFY_ATTR_TARGET="$DOTIFY_ARG_TARGET"
     else
-      echo "ERROR: Target \"$ARG_TARGET\" is not a directory." >&2
+      echo "ERROR: Target \"$DOTIFY_ARG_TARGET\" is not a directory." >&2
       return 1
     fi
   elif [ -n "$HOME" ] && [ -d "$HOME" ]; then
@@ -500,11 +500,11 @@ dotify-action-git-post-run() {
 #
 
 root_link () {
-  dotify-set-root-link "$@"
+  dotify-set-root-link $@
 }
 
 default_action() {
-  dotify-set-default-action "$@"
+  dotify-set-default-action $@
 }
 
 include() {
@@ -513,81 +513,97 @@ include() {
 
 
 #
-# Argument Parsing
+# Main
 #
 
-ARG_DOTFILE="" # --dotfile / -f
-ARG_TARGET=""  # --target  / -t
-ARG_DRY_RUN="" # --dry-run / -d
-ARG_HELP=""    # --help    / -h
-ARG_VERSION="" # --version / -v
+dotify-main-parse-arguments() {
+  DOTIFY_ARG_DOTFILE="" # --dotfile / -f
+  DOTIFY_ARG_TARGET=""  # --target  / -t
+  DOTIFY_ARG_DRY_RUN="" # --dry-run / -d
+  DOTIFY_ARG_HELP=""    # --help    / -h
+  DOTIFY_ARG_VERSION="" # --version / -v
 
-if has-argument dotfile f "$@"; then
-  ARG_DOTFILE="$(parse-argument dotfile f "$@")"
-fi
-
-if has-argument target t "$@"; then
-  ARG_TARGET="$(parse-argument target t "$@")"
-fi
-
-if has-argument dry-run d "$@"; then
-  ARG_DRY_RUN="1"
-fi
-
-if has-argument help h "$@"; then
-  ARG_HELP="1"
-fi
-
-if has-argument version v "$@"; then
-  ARG_VERSION="1"
-fi
-
-
-#
-# Command Parsing
-#
-
-# Command is first argument that does not start with a dash or plus.
-for arg in "$@"; do
-  if [ -n "$skip_next" ]; then
-    skip_next=
-  elif [[ "$arg" =~ ^(--dotfile|-f|--taraget|-t)$ ]]; then
-    skip_next=1
-  elif [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
-    command="$arg"
-    break
+  if has-argument dotfile f "$@"; then
+    DOTIFY_ARG_DOTFILE="$(parse-argument dotfile f "$@")"
   fi
-done
 
-# Show help and exit if help arguments or command are given.
-if [ -n "$ARG_HELP" ] || [ "$command" == "help" ]; then
-  dotify-command-help
-  exit
-fi
+  if has-argument target t "$@"; then
+    DOTIFY_ARG_TARGET="$(parse-argument target t "$@")"
+  fi
 
-# Show version info and exit if version arguments or command are given.
-if [ -n "$ARG_VERSION" ] || [ "$command" == "version" ]; then
-  dotify-command-help | head -1
-  exit
-fi
+  if has-argument dry-run d "$@"; then
+    DOTIFY_ARG_DRY_RUN="1"
+  fi
 
-# Deal with the commands.
-case "$command" in
-  "info" )
-    dotify-command-info
-    ;;
-  "compile" )
-    dotify-command-compile
-    ;;
-  "" | "install" )
-    dotify-command-install
-    ;;
-  "uninstall" )
-    dotify-command-uninstall
-    ;;
-  "clean" )
-    dotify-command-clean
-    ;;
-esac
+  if has-argument help h "$@"; then
+    DOTIFY_ARG_HELP="1"
+  fi
+
+  if has-argument version v "$@"; then
+    DOTIFY_ARG_VERSION="1"
+  fi
+}
+
+dotify-main-parse-command() {
+  local skip_next
+
+  # Command is first argument that does not start with a dash or plus.
+  for arg in "$@"; do
+    if [ -n "$skip_next" ]; then
+      skip_next=
+    elif [[ "$arg" =~ ^(--dotfile|-f|--taraget|-t)$ ]]; then
+      skip_next=1
+    elif [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
+      DOTIFY_COMMAND="$arg"
+      break
+    fi
+  done
+}
+
+dotify-main-dispatcher() {
+  # Show help and exit if help arguments or command are given.
+  if [ -n "$DOTIFY_ARG_HELP" ] || [ "$DOTIFY_COMMAND" == "help" ]; then
+    dotify-command-help
+    exit
+  fi
+
+  # Show version info and exit if version arguments or command are given.
+  if [ -n "$DOTIFY_ARG_VERSION" ] || [ "$DOTIFY_COMMAND" == "version" ]; then
+    dotify-command-help | head -1
+    exit
+  fi
+
+  # Deal with the commands.
+  case "$DOTIFY_COMMAND" in
+    "info" )
+      dotify-command-info
+      ;;
+    "compile" )
+      dotify-command-compile
+      ;;
+    "" | "install" )
+      dotify-command-install
+      ;;
+    "uninstall" )
+      dotify-command-uninstall
+      ;;
+    "clean" )
+      dotify-command-clean
+      ;;
+  esac
+
+  return $?
+}
+
+dotify-main() {
+  dotify-main-parse-arguments $@
+  dotify-main-parse-command $@
+  dotify-main-dispatcher $@
+
+  return $?
+}
+
+
+dotify-main $@
 
 exit $?
