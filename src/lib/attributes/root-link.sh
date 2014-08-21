@@ -1,5 +1,5 @@
 dotify-set-root-link() {
-  DOTIFY_ATTR_ROOT_LINK="$1"
+  DOTIFY_ATTR_ROOT_LINK="$@"
 }
 
 dotify-get-root-link() {

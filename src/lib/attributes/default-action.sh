@@ -1,5 +1,5 @@
 dotify-set-default-action() {
-  DOTIFY_ATTR_DEFAULT_ACTION="$1"
+  DOTIFY_ATTR_DEFAULT_ACTION="$@"
 }
 
 dotify-get-default-action() {

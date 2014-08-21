@@ -1,3 +1,3 @@
 default_action() {
-  dotify-set-default-action "$@"
+  dotify-set-default-action $@
 }

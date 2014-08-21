@@ -1,3 +1,3 @@
 root_link () {
-  dotify-set-root-link "$@"
+  dotify-set-root-link $@
 }

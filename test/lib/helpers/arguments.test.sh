@@ -46,5 +46,4 @@ assert 'parse-argument file f -v --file=foo\ bar.txt' "foo bar.txt"
 assert 'parse-argument file f -v --file="foo bar.txt"' "foo bar.txt"
 assert "parse-argument file f -v --file='foo bar.txt'" "foo bar.txt"
 
-
 assert_end "parse-argument()"

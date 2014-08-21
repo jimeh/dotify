@@ -4,7 +4,7 @@ source "../../../src/lib/internals/register-action.sh"
 source "../../../src/lib/internals/has-action.sh"
 
 #
-# dotify-register-action() tests
+# dotify-has-action() tests
 #
 
 # When no actions are registered.
@@ -29,4 +29,4 @@ assert_raises 'dotify-has-action "copy"' 1
 unset DOTIFY_ACTIONS
 
 
-assert_end "dotify-register-action() tests"
+assert_end "dotify-has-action() tests"
