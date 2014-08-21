@@ -8,7 +8,7 @@ dotify-main-parse-command() {
     elif [[ "$arg" =~ ^(--dotfile|-f|--taraget|-t)$ ]]; then
       skip_next=1
     elif [[ "$arg" != "-"* ]] && [[ "$arg" != "+"* ]]; then
-      COMMAND="$arg"
+      DOTIFY_COMMAND="$arg"
       break
     fi
   done

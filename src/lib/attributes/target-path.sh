@@ -4,11 +4,11 @@ dotify-get-target-path() {
     return 0
   fi
 
-  if [ -n "$ARG_TARGET" ]; then
-    if [ -d "$ARG_TARGET" ]; then
-      DOTIFY_ATTR_TARGET="$ARG_TARGET"
+  if [ -n "$DOTIFY_ARG_TARGET" ]; then
+    if [ -d "$DOTIFY_ARG_TARGET" ]; then
+      DOTIFY_ATTR_TARGET="$DOTIFY_ARG_TARGET"
     else
-      echo "ERROR: Target \"$ARG_TARGET\" is not a directory." >&2
+      echo "ERROR: Target \"$DOTIFY_ARG_TARGET\" is not a directory." >&2
       return 1
     fi
   elif [ -n "$HOME" ] && [ -d "$HOME" ]; then

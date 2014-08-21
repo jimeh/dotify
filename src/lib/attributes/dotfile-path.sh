@@ -4,11 +4,11 @@ dotify-get-dotfile-path() {
     return 0
   fi
 
-  if [ -n "$ARG_DOTFILE" ]; then
-    if [ -f "$ARG_DOTFILE" ]; then
-      DOTIFY_ATTR_DOTFILE_PATH="$ARG_DOTFILE"
+  if [ -n "$DOTIFY_ARG_DOTFILE" ]; then
+    if [ -f "$DOTIFY_ARG_DOTFILE" ]; then
+      DOTIFY_ATTR_DOTFILE_PATH="$DOTIFY_ARG_DOTFILE"
     else
-      echo "ERROR: \"$ARG_DOTFILE\" does not exist." >&2
+      echo "ERROR: \"$DOTIFY_ARG_DOTFILE\" does not exist." >&2
       return 1
     fi
   elif [ -f "$(pwd)/Dotfile" ]; then
