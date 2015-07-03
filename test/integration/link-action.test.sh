@@ -14,14 +14,19 @@ mkdir -p "$TEST_SOURCE" "$TEST_TARGET"
 PROFILE_TXT="# I am a .profile file"
 echo "$PROFILE_TXT" > "$TEST_SOURCE/profile"
 
+# Creates root link.
+echo -e "" > "$MY_DOTFILE"
+rm "$TEST_TARGET/.profile"
+rm "$MY_DOTFILE"
+
 # Basic of basics.
 echo -e "profile -> .profile" > "$MY_DOTFILE"
-assert_raises "dotify -f '$MY_DOTFILE' -t '$TEST_TARGET'" 0
 assert "dotify -f '$MY_DOTFILE' -t '$TEST_TARGET'" \
   "   Create symlink: $TEST_TARGET/.profile -> .dotfiles/profile"
+assert "readlink '$TEST_TARGET/.dotfiles'" "$TEST_SOURCE"
 assert "readlink '$TEST_TARGET/.profile'" ".dotfiles/profile"
 assert "cat '$TEST_TARGET/.profile'" "$PROFILE_TXT"
-rm "TEST_TARGET/.profile"
+rm "$TEST_TARGET/.profile"
 rm "$MY_DOTFILE"
 
 
