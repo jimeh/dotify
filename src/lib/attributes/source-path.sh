@@ -5,6 +5,13 @@ dotify-get-source-path() {
   echo "$(dirname "$dotfile")"
 }
 
+dotify-get-absolute-source-path() {
+  local dotfile="$(dotify-get-dotfile-path)"
+  if [ "$?" != "0" ]; then return 1; fi
+
+  echo "$(abs_dirname "$dotfile")"
+}
+
 dotify-valid-source-path() {
   dotify-get-source-path >/dev/null 2>&1
   return "$?"
