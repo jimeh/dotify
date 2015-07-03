@@ -4,19 +4,19 @@ dotify-create-symlink() {
 
   if [ ! -e "$target" ] && [ ! -h "$target" ]; then
     ln -s "$source" "$target"
-    echo "created"
+    echo "   create: $target --> $source"
     return 0
   elif [ -h "$target" ]; then
-    if [ "$(readlink "$target")" == "$source" ]; then
-      echo "exists"
+    local link_source="$(readlink "$target")"
+    if [ "$link_source" == "$source" ]; then
+      echo "   exists: $target"
       return 0
     else
-      echo "ERROR: \"$target\" exists, is a symlink to:" \
-        "$(readlink "$target")" >&2
+      echo "   exists: $target -- is symlink to: $link_source"
       return 1
     fi
   else
-    echo "ERROR: \"$target\" exists" >&2
-    return 1
+      echo "   exists: $target -- is a regular file/folder"
+    return 2
   fi
 }

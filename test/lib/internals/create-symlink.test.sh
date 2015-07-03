@@ -14,39 +14,46 @@ touch "tmp/source/profile"
 assert_raises 'dotify-create-symlink ../source tmp/target/.dotfiles' 0
 assert 'readlink tmp/target/.dotfiles' "../source"
 rm "tmp/target/.dotfiles"
-assert 'dotify-create-symlink ../source tmp/target/.dotfiles' "created"
+assert 'dotify-create-symlink ../source tmp/target/.dotfiles' \
+       "   create: tmp/target/.dotfiles --> ../source"
 rm "tmp/target/.dotfiles"
-assert 'dotify-create-symlink ../source tmp/target/.dotfiles 2>&1' "created"
+assert 'dotify-create-symlink ../source tmp/target/.dotfiles 2>&1' \
+       "   create: tmp/target/.dotfiles --> ../source"
 rm "tmp/target/.dotfiles"
 
 # When target exists and is a symlink to the same source.
 ln -s "../source" "tmp/target/.dotfiles"
 assert_raises 'dotify-create-symlink ../source tmp/target/.dotfiles' 0
-assert 'dotify-create-symlink ../source tmp/target/.dotfiles' "exists"
-assert 'dotify-create-symlink ../source tmp/target/.dotfiles 2>&1' "exists"
+assert 'dotify-create-symlink ../source tmp/target/.dotfiles' \
+       "   exists: tmp/target/.dotfiles"
+assert 'dotify-create-symlink ../source tmp/target/.dotfiles 2>&1' \
+       "   exists: tmp/target/.dotfiles"
 rm "tmp/target/.dotfiles"
 
 # When target exists and is a symlink to a different source.
 ln -s "../other" "tmp/target/.dotfiles"
 assert_raises 'dotify-create-symlink ../source tmp/target/.dotfiles' 1
-assert 'dotify-create-symlink ../source tmp/target/.dotfiles' ""
+assert 'dotify-create-symlink ../source tmp/target/.dotfiles' \
+       "   exists: tmp/target/.dotfiles -- is symlink to: ../other"
 assert 'dotify-create-symlink ../source tmp/target/.dotfiles 2>&1' \
-  "ERROR: \"tmp/target/.dotfiles\" exists, is a symlink to: ../other"
+       "   exists: tmp/target/.dotfiles -- is symlink to: ../other"
 rm "tmp/target/.dotfiles"
 
 # When target exists and is a file.
 touch "tmp/target/.profile"
-assert_raises 'dotify-create-symlink ../source/profile tmp/target/.profile' 1
-assert 'dotify-create-symlink ../source/profile tmp/target/.profile' ""
+assert_raises 'dotify-create-symlink ../source/profile tmp/target/.profile' 2
+assert 'dotify-create-symlink ../source/profile tmp/target/.profile' \
+       "   exists: tmp/target/.profile -- is a regular file/folder"
 assert 'dotify-create-symlink ../source/profile tmp/target/.profile 2>&1' \
-  "ERROR: \"tmp/target/.profile\" exists"
+       "   exists: tmp/target/.profile -- is a regular file/folder"
 rm "tmp/target/.profile"
 
 # When target exists and is a directory.
-assert_raises 'dotify-create-symlink ../source tmp/target' 1
-assert 'dotify-create-symlink ../source tmp/target' ""
+assert_raises 'dotify-create-symlink ../source tmp/target' 2
+assert 'dotify-create-symlink ../source tmp/target' \
+       "   exists: tmp/target -- is a regular file/folder"
 assert 'dotify-create-symlink ../source tmp/target 2>&1' \
-  "ERROR: \"tmp/target\" exists"
+       "   exists: tmp/target -- is a regular file/folder"
 
 # Remove temp files/folders used for locate-dotfile() tests.
 rm "tmp/source/profile"
