@@ -1,12 +1,14 @@
 # Checks for specified argument.
 #
+# Requires bash extended globbing: shopt -s extglob
+#
 # Example:
 #
-#   $ has-argument help h "-t none"
+#   $ has-argument help h -t none
 #   > returns 1
-#   $ has-argument help h "-t none --help"
+#   $ has-argument help h -t none --help
 #   > returns 0
-#   $ has-argument help h "-t none -h"
+#   $ has-argument help h -t none -h
 #   > returns 0
 #
 # Returns 0 if argument was found, returns 1 otherwise.
@@ -17,15 +19,16 @@ has-argument() {
   short="-$2"
   shift 2
 
-  if [[ " $@ " == *" $long "* ]] || [[ " $@ " == *" $long="* ]]; then
-    return 0
-  elif [[ " $@ " == *" $short "* ]] || [[ " $@ " == *" $short="* ]]; then
+  if [[ " $* " =~ ^.*\ ($long|$short)(=.+)?\ .*$ ]]; then
     return 0
   fi
+
   return 1
 }
 
 # Parses and echos value of specified argument.
+#
+# Requires bash extended globbing: shopt -s extglob
 #
 # Example:
 #
@@ -50,17 +53,13 @@ parse-argument() {
     if [ -n "$next_arg" ]; then
       echo "$arg"
       return 0
-    elif [[ " $arg " == *" $long "* ]] || [[ " $arg " == *" $short "* ]]; then
-      next_arg="yes"
-    elif [[ " $arg " == *" $long="* ]]; then
-      arg="${arg/#$long=/}"
-      echo "$arg"
-      return 0
-    elif [[ " $arg " == *" $short="* ]]; then
-      arg="${arg/#$short=/}"
-      echo "$arg"
+    elif [[ " $arg " =~ ^\ ($long|$short)\ $ ]]; then
+      next_arg=1
+    elif [[ " $arg " =~ ^\ ($long|$short)=(.+)\ $ ]]; then
+      echo "${BASH_REMATCH[2]}"
       return 0
     fi
   done
+
   return 1
 }
